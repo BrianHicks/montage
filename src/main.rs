@@ -17,6 +17,9 @@ struct Opts {
 
 impl Opts {
     fn run(&self) -> Result<()> {
+        let state = state::Store::create_or_load()?;
+        println!("{:#?}", state);
+
         println!("{:#?}", self);
         Ok(())
     }
