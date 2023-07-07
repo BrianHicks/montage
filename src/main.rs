@@ -71,7 +71,12 @@ impl Opts {
                     }
                 }
             }
-            _ => todo!(),
+            Command::Vex => {
+                loop {
+                    println!("vexing!");
+                    std::thread::sleep(std::time::Duration::new(1, 0));
+                }
+            }
         }
 
         Ok(())
