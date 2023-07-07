@@ -59,6 +59,18 @@ impl Opts {
                         .wrap_err("failed to run start script after starting")?;
                 }
             }
+            Command::Xbar => {
+                let now = Local::now();
+                match store.state {
+                    state::State::NothingIsHappening {} => println!("no task"),
+                    state::State::Running { task, until } => {
+                        println!("{} ({} minutes)", task, (until - now).num_minutes())
+                    }
+                    state::State::OnBreak { until } => {
+                        println!("on break ({} minutes)", (until - now).num_minutes())
+                    }
+                }
+            }
             _ => todo!(),
         }
 

@@ -40,7 +40,7 @@ impl State {
 #[derive(Debug)]
 pub struct Store {
     loaded_from: Option<PathBuf>,
-    state: State,
+    pub state: State,
 }
 
 /// Note for the future: the loads and writes aren't doing any kind of locking on any platform.
