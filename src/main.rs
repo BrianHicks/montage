@@ -15,6 +15,13 @@ struct Opts {
     scripts: Option<PathBuf>,
 }
 
+impl Opts {
+    fn run(&self) -> Result<()> {
+        println!("{:#?}", self);
+        Ok(())
+    }
+}
+
 #[derive(clap::Subcommand, Debug)]
 enum Command {
     /// Start a task
@@ -45,27 +52,7 @@ enum Command {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let opts = Opts::parse();
-
-    println!("{:#?}", opts);
-
-    println!(
-        "{:}",
-        serde_json::to_string(&state::State::NothingIsHappening {})?
-    );
-    println!(
-        "{:}",
-        serde_json::to_string(&state::State::Running {
-            task: String::from("hey"),
-            until: chrono::Local::now(),
-        })?
-    );
-    println!(
-        "{:}",
-        serde_json::to_string(&state::State::OnBreak {
-            until: chrono::Local::now()
-        })?
-    );
+    Opts::parse().run()?;
 
     Ok(())
 }
