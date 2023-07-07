@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use color_eyre::eyre::{bail, eyre, Result, WrapErr};
-use serde;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -87,7 +86,7 @@ impl Store {
                     }
                 }
 
-                let mut file = File::create(&loaded_from).wrap_err("could not open state file")?;
+                let mut file = File::create(loaded_from).wrap_err("could not open state file")?;
                 write!(
                     file,
                     "{}",
