@@ -26,8 +26,8 @@ enum Command {
         duration: usize,
     },
 
-    /// Show the current task and remaining time OR that there's no task
-    Status,
+    /// Show an xbar status message
+    StatusBar,
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
