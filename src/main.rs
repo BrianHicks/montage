@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use color_eyre::eyre::Result;
 
 mod state;
 
@@ -41,28 +42,30 @@ enum Command {
     Vex,
 }
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
     let opts = Opts::parse();
 
     println!("{:#?}", opts);
 
     println!(
         "{:}",
-        serde_json::to_string(&state::State::NothingIsHappening {}).unwrap()
+        serde_json::to_string(&state::State::NothingIsHappening {})?
     );
     println!(
         "{:}",
         serde_json::to_string(&state::State::Running {
             task: String::from("hey"),
             until: chrono::Local::now(),
-        })
-        .unwrap()
+        })?
     );
     println!(
         "{:}",
         serde_json::to_string(&state::State::OnBreak {
             until: chrono::Local::now()
-        })
-        .unwrap()
+        })?
     );
+
+    Ok(())
 }
