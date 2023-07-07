@@ -31,7 +31,7 @@ impl Opts {
 
                 if let Some(scripts) = &self.scripts {
                     scripts
-                        .start(name)
+                        .on_start(name)
                         .wrap_err("failed to run start script after starting")?;
                 }
             }

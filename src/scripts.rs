@@ -19,8 +19,8 @@ pub fn value_parser(s: &str) -> Result<Scripts> {
 }
 
 impl Scripts {
-    pub fn start(&self, name: &str) -> Result<()> {
-        let to_run = self.join("start");
+    pub fn on_start(&self, name: &str) -> Result<()> {
+        let to_run = self.join("on-start");
         if to_run.exists() {
             let mut command = Command::new(to_run);
             command.arg(name);
