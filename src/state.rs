@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
-use color_eyre::eyre::{bail, eyre, Result, WrapErr};
-use notify::Watcher;
+use color_eyre::eyre::{eyre, Result, WrapErr};
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -38,15 +37,14 @@ impl State {
     }
 }
 
-#[derive(Debug)]
 pub struct Store {
     loaded_from: PathBuf,
     pub state: State,
 
     // watching
     watcher: Option<(
-        notify::RecommendedWatcher,
-        crossbeam_channel::Receiver<notify::Event>,
+        notify_debouncer_mini::Debouncer<notify::RecommendedWatcher>,
+        crossbeam_channel::Receiver<()>,
     )>,
 }
 
@@ -112,27 +110,29 @@ impl Store {
         Ok(())
     }
 
-    pub fn watch(&mut self) -> Result<crossbeam_channel::Receiver<notify::Event>> {
+    pub fn watch(&mut self) -> Result<crossbeam_channel::Receiver<()>> {
         match &self.watcher {
             Some((_, recv)) => Ok(recv.clone()),
             None => {
                 let (send, recv) = crossbeam_channel::bounded(1);
 
-                let mut watcher = notify::RecommendedWatcher::new(
+                let mut debouncer = notify_debouncer_mini::new_debouncer(
+                    std::time::Duration::from_millis(500),
+                    None,
                     move |event_res| match event_res {
-                        Ok(event) => send.send(event).unwrap(),
+                        Ok(_) => send.send(()).unwrap(),
                         Err(err) => eprintln!("error in watcher: {:?}", err),
                     },
-                    notify::Config::default(),
                 )
                 .wrap_err("could not start file watcher")?;
 
-                watcher
+                debouncer
+                    .watcher()
                     .watch(&self.loaded_from, notify::RecursiveMode::NonRecursive)
                     .wrap_err("could not watch store path")?;
 
                 let to_return = recv.clone();
-                self.watcher = Some((watcher, recv));
+                self.watcher = Some((debouncer, recv));
 
                 Ok(to_return)
             }

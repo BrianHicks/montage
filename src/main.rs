@@ -78,13 +78,13 @@ impl Opts {
                 loop {
                     crossbeam_channel::select! {
                         recv(store_events) -> msg_res => match msg_res {
-                            Ok(_) => {
+                            Ok(()) => {
                                 store.reload().wrap_err("could not reload store")?;
                                 println!("{:#?}", store.state);
                             },
                             Err(err) => println!("err: {:#?}", err),
                         },
-                        recv(tick_events) -> msg => println!("tick: {:#?}", msg),
+                        recv(tick_events) -> _msg => println!("tick"),
                     }
                 }
             }
