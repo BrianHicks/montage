@@ -18,6 +18,7 @@
               pkgs.rustc
               pkgs.rustfmt
               pkgs.libiconv
+              pkgs.rust-analyzer
             ];
           };
       }
