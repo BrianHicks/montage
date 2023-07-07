@@ -52,6 +52,12 @@ impl Opts {
                 store
                     .write()
                     .wrap_err("could not write state after starting break")?;
+
+                if let Some(scripts) = &self.scripts {
+                    scripts
+                        .on_stop()
+                        .wrap_err("failed to run start script after starting")?;
+                }
             }
             _ => todo!(),
         }

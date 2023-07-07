@@ -31,6 +31,7 @@ Montage can automatically execute some scripts in a directory. They have to be n
 
 - `on-start` is run when you start doing something
 - `on-break` is run when you start a break
+- `on-stop` is run when a break or session stops
 
 ## License
 
