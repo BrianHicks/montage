@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -5,6 +7,9 @@ use clap::Parser;
 struct Opts {
     #[command(subcommand)]
     command: Command,
+
+    #[arg(long, env = "MONTAGE_SCRIPTS", global = true)]
+    scripts: Option<PathBuf>,
 }
 
 #[derive(clap::Subcommand, Debug)]
