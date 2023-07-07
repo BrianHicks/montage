@@ -31,7 +31,7 @@ enum Command {
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
-    Daemon,
+    Vex,
 }
 
 fn main() {
