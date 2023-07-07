@@ -1,9 +1,8 @@
-use std::path::PathBuf;
-
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{Result, WrapErr};
 
+mod scripts;
 mod state;
 
 #[derive(Parser, Debug)]
@@ -12,8 +11,8 @@ struct Opts {
     #[command(subcommand)]
     command: Command,
 
-    #[arg(long, env = "MONTAGE_SCRIPTS", global = true)]
-    scripts: Option<PathBuf>,
+    #[arg(long, env = "MONTAGE_SCRIPTS", global = true, value_parser = scripts::value_parser)]
+    scripts: Option<scripts::Scripts>,
 }
 
 impl Opts {
@@ -29,6 +28,12 @@ impl Opts {
                 store
                     .write()
                     .wrap_err("could not write state after starting")?;
+
+                if let Some(scripts) = &self.scripts {
+                    scripts
+                        .start(name)
+                        .wrap_err("failed to run start script after starting")?;
+                }
             }
             Command::Break { duration } => {
                 store.start_break(Local::now() + Duration::minutes(TryInto::try_into(*duration)?));
@@ -36,7 +41,7 @@ impl Opts {
                     .write()
                     .wrap_err("could not write state after starting break")?;
             }
-            Command::Stop  => {
+            Command::Stop => {
                 store.stop();
                 store
                     .write()
