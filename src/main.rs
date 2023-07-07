@@ -53,12 +53,16 @@ fn main() {
     println!(
         "{:}",
         serde_json::to_string(&state::State::Running {
-            task: String::from("hey")
+            task: String::from("hey"),
+            until: chrono::Local::now(),
         })
         .unwrap()
     );
     println!(
         "{:}",
-        serde_json::to_string(&state::State::OnBreak {}).unwrap()
+        serde_json::to_string(&state::State::OnBreak {
+            until: chrono::Local::now()
+        })
+        .unwrap()
     );
 }

@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local};
 use serde;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -6,6 +7,9 @@ pub enum State {
     NothingIsHappening {},
     Running {
         task: String,
+        until: DateTime<Local>,
     },
-    OnBreak {},
+    OnBreak {
+        until: DateTime<Local>,
+    },
 }
