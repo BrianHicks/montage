@@ -80,11 +80,24 @@ impl Opts {
                         recv(store_events) -> msg_res => match msg_res {
                             Ok(()) => {
                                 store.reload().wrap_err("could not reload store")?;
-                                println!("{:#?}", store.state);
                             },
                             Err(err) => println!("err: {:#?}", err),
                         },
-                        recv(tick_events) -> _msg => println!("tick"),
+                        recv(tick_events) -> _msg => {
+                            let now = Local::now();
+
+                            let beep_after = match store.state {
+                                state::State::NothingIsHappening {} => now,
+                                state::State::Running { until, .. } => until,
+                                state::State::OnBreak { until } => until,
+                            };
+
+                            if now >= beep_after {
+                                std::process::Command::new("say").arg("hey").spawn()?;
+                            } else {
+                                println!("{}", beep_after - now);
+                            }
+                        },
                     }
                 }
             }
