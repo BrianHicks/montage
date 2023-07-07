@@ -50,7 +50,15 @@ impl Store {
 
             Ok(store)
         } else {
-            bail!("TODO")
+            let state_bytes =
+                std::fs::read_to_string(&state_file).wrap_err("could not read state file")?;
+            let state =
+                serde_json::from_str(&state_bytes).wrap_err("could not deserialize state")?;
+
+            Ok(Store {
+                loaded_from: Some(state_file),
+                state,
+            })
         }
     }
 
