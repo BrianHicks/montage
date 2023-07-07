@@ -72,9 +72,17 @@ impl Opts {
                 }
             }
             Command::Vex => {
+                let store_events = store.watch().wrap_err("could not watch store")?;
+                let tick_events = crossbeam_channel::tick(std::time::Duration::new(1, 0));
+
                 loop {
-                    println!("vexing!");
-                    std::thread::sleep(std::time::Duration::new(1, 0));
+                    crossbeam_channel::select! {
+                        recv(store_events) -> msg_res => match msg_res {
+                            Ok(msg) => println!("msg: {:#?}", msg),
+                            Err(err) => println!("err: {:#?}", err),
+                        },
+                        recv(tick_events) -> msg => println!("tick: {:#?}", msg),
+                    }
                 }
             }
         }

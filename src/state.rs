@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use color_eyre::eyre::{bail, eyre, Result, WrapErr};
+use notify::Watcher;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -39,8 +40,14 @@ impl State {
 
 #[derive(Debug)]
 pub struct Store {
-    loaded_from: Option<PathBuf>,
+    loaded_from: PathBuf,
     pub state: State,
+
+    // watching
+    watcher: Option<(
+        notify::RecommendedWatcher,
+        crossbeam_channel::Receiver<notify::Event>,
+    )>,
 }
 
 /// Note for the future: the loads and writes aren't doing any kind of locking on any platform.
@@ -55,8 +62,9 @@ impl Store {
 
         if !state_file.exists() {
             let store = Store {
-                loaded_from: Some(state_file),
+                loaded_from: state_file,
                 state: State::default(),
+                watcher: None,
             };
 
             store.write().wrap_err("could not write initial state")?;
@@ -69,32 +77,55 @@ impl Store {
                 serde_json::from_str(&state_bytes).wrap_err("could not deserialize state")?;
 
             Ok(Store {
-                loaded_from: Some(state_file),
+                loaded_from: state_file,
                 state,
+                watcher: None,
             })
         }
     }
 
     pub fn write(&self) -> Result<()> {
-        match &self.loaded_from {
-            None => bail!("this store wasn't loaded from disk, so it can't be written back"),
-            Some(loaded_from) => {
-                if let Some(parent) = loaded_from.parent() {
-                    if !parent.exists() {
-                        std::fs::create_dir_all(parent)
-                            .wrap_err("could not create parent directories to store")?;
-                    }
-                }
+        if let Some(parent) = self.loaded_from.parent() {
+            if !parent.exists() {
+                std::fs::create_dir_all(parent)
+                    .wrap_err("could not create parent directories to store")?;
+            }
+        }
 
-                let mut file = File::create(loaded_from).wrap_err("could not open state file")?;
-                write!(
-                    file,
-                    "{}",
-                    serde_json::to_string(&self.state).wrap_err("could not serialize state")?
+        let mut file = File::create(&self.loaded_from).wrap_err("could not open state file")?;
+        write!(
+            file,
+            "{}",
+            serde_json::to_string(&self.state).wrap_err("could not serialize state")?
+        )
+        .wrap_err("failed to write state file to disk")?;
+
+        Ok(())
+    }
+
+    pub fn watch(&mut self) -> Result<crossbeam_channel::Receiver<notify::Event>> {
+        match &self.watcher {
+            Some((_, recv)) => Ok(recv.clone()),
+            None => {
+                let (send, recv) = crossbeam_channel::bounded(1);
+
+                let mut watcher = notify::RecommendedWatcher::new(
+                    move |event_res| match event_res {
+                        Ok(event) => send.send(event).unwrap(),
+                        Err(err) => eprintln!("error in watcher: {:?}", err),
+                    },
+                    notify::Config::default(),
                 )
-                .wrap_err("failed to write state file to disk")?;
+                .wrap_err("could not start file watcher")?;
 
-                Ok(())
+                watcher
+                    .watch(&self.loaded_from, notify::RecursiveMode::NonRecursive)
+                    .wrap_err("could not watch store path")?;
+
+                let to_return = recv.clone();
+                self.watcher = Some((watcher, recv));
+
+                Ok(to_return)
             }
         }
     }
