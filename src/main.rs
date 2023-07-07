@@ -1,9 +1,17 @@
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{Result, WrapErr};
+use rand::seq::SliceRandom;
 
 mod scripts;
 mod state;
+
+static THINGS_TO_SAY: [&'static str; 4] = [
+    "hey",
+    "pick a new task",
+    "Brian",
+    "time for a break?"
+];
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -64,16 +72,17 @@ impl Opts {
                 match store.state {
                     state::State::NothingIsHappening {} => println!("no task"),
                     state::State::Running { task, until } => {
-                        println!("{} ({} minutes)", task, (until - now).num_minutes())
+                        println!("{} ({})", task, Self::humanize_duration(until - now))
                     }
                     state::State::OnBreak { until } => {
-                        println!("on break ({} minutes)", (until - now).num_minutes())
+                        println!("on break ({})", Self::humanize_duration(until - now))
                     }
                 }
             }
             Command::Vex => {
                 let store_events = store.watch().wrap_err("could not watch store")?;
-                let tick_events = crossbeam_channel::tick(std::time::Duration::new(1, 0));
+                let tick_events = crossbeam_channel::tick(std::time::Duration::from_secs(2));
+                let mut rng = rand::thread_rng();
 
                 loop {
                     crossbeam_channel::select! {
@@ -93,10 +102,10 @@ impl Opts {
                             };
 
                             if now >= beep_after {
-                                std::process::Command::new("say").arg("hey").spawn()?;
-                            } else {
-                                println!("{}", beep_after - now);
+                                let what_to_say = THINGS_TO_SAY.choose(&mut rng).unwrap();
+                                std::process::Command::new("say").arg(what_to_say).spawn()?;
                             }
+                            println!("{}", Self::humanize_duration(beep_after - now));
                         },
                     }
                 }
@@ -104,6 +113,14 @@ impl Opts {
         }
 
         Ok(())
+    }
+
+    fn humanize_duration(duration: chrono::Duration) -> String {
+        match duration.num_minutes() {
+            0 => format!("{} seconds", duration.num_seconds()),
+            1 => format!("1 minute, {} seconds", duration.num_seconds() - 60),
+            more => format!("{} minutes", more),
+        }
     }
 }
 
