@@ -30,6 +30,18 @@ impl Opts {
                     .write()
                     .wrap_err("could not write state after starting")?;
             }
+            Command::Break { duration } => {
+                store.start_break(Local::now() + Duration::minutes(TryInto::try_into(*duration)?));
+                store
+                    .write()
+                    .wrap_err("could not write state after starting break")?;
+            }
+            Command::Stop  => {
+                store.stop();
+                store
+                    .write()
+                    .wrap_err("could not write state after starting break")?;
+            }
             _ => todo!(),
         }
 
@@ -55,6 +67,9 @@ enum Command {
         #[arg(long, default_value = "5")]
         duration: usize,
     },
+
+    /// Stop permanently (like, for the day or for an extended break)
+    Stop,
 
     /// Show an xbar status message
     Xbar,
