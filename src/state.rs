@@ -24,6 +24,20 @@ impl Default for State {
     }
 }
 
+impl State {
+    pub fn start(&self, task: String, until: DateTime<Local>) -> State {
+        State::Running { task, until }
+    }
+
+    pub fn start_break(&self, until: DateTime<Local>) -> State {
+        State::OnBreak { until }
+    }
+
+    pub fn stop(&self) -> State {
+        State::NothingIsHappening {}
+    }
+}
+
 #[derive(Debug)]
 pub struct Store {
     loaded_from: Option<PathBuf>,
@@ -84,5 +98,17 @@ impl Store {
                 Ok(())
             }
         }
+    }
+
+    pub fn start(&mut self, task: String, until: DateTime<Local>) {
+        self.state = self.state.start(task, until);
+    }
+
+    pub fn start_break(&mut self, until: DateTime<Local>) {
+        self.state = self.state.start_break(until);
+    }
+
+    pub fn stop(&mut self) {
+        self.state = self.state.stop();
     }
 }

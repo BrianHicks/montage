@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
+use chrono::{Duration, Local};
 use clap::Parser;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{Result, WrapErr};
 
 mod state;
 
@@ -17,10 +18,21 @@ struct Opts {
 
 impl Opts {
     fn run(&self) -> Result<()> {
-        let state = state::Store::create_or_load()?;
-        println!("{:#?}", state);
+        let mut store = state::Store::create_or_load()?;
 
-        println!("{:#?}", self);
+        match &self.command {
+            Command::Start { name, duration } => {
+                store.start(
+                    name.to_string(),
+                    Local::now() + Duration::minutes(TryInto::try_into(*duration)?),
+                );
+                store
+                    .write()
+                    .wrap_err("could not write state after starting")?;
+            }
+            _ => todo!(),
+        }
+
         Ok(())
     }
 }
