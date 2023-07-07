@@ -30,6 +30,9 @@ pub struct Store {
     state: State,
 }
 
+/// Note for the future: the loads and writes aren't doing any kind of locking on any platform.
+/// This probably won't be a huge problem, but it might be eventually. It's something to watch out
+/// for, certainly!
 impl Store {
     pub fn create_or_load() -> Result<Self> {
         let state_file = directories::ProjectDirs::from("zone", "bytes", "montage")
