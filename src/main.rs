@@ -119,7 +119,7 @@ impl Opts {
         match duration.num_minutes() {
             0 => format!("{} seconds", duration.num_seconds()),
             1 => format!("1 minute, {} seconds", duration.num_seconds() - 60),
-            more => format!("{} minutes", more),
+            more => format!("{} minutes", more + 1),
         }
     }
 }
