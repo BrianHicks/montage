@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
+mod state;
+
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Opts {
@@ -43,4 +45,20 @@ fn main() {
     let opts = Opts::parse();
 
     println!("{:#?}", opts);
+
+    println!(
+        "{:}",
+        serde_json::to_string(&state::State::NothingIsHappening {}).unwrap()
+    );
+    println!(
+        "{:}",
+        serde_json::to_string(&state::State::Running {
+            task: String::from("hey")
+        })
+        .unwrap()
+    );
+    println!(
+        "{:}",
+        serde_json::to_string(&state::State::OnBreak {}).unwrap()
+    );
 }
