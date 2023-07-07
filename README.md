@@ -25,6 +25,13 @@ You can also run `montage break --duration 5` (minutes again there) to get the n
 
 You can also run `montage xbar` to get a status bar that you can use to control the program in [xbar](https://xbarapp.com/) 
 
+### Scripts
+
+Montage can automatically execute some scripts in a directory. They have to be named in a specific way:
+
+- `on-start` is run when you start doing something
+- `on-break` is run when you start a break
+
 ## License
 
 BSD 3-Clause
