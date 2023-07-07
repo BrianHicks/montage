@@ -31,6 +31,15 @@ impl Scripts {
         Ok(())
     }
 
+    pub fn on_break(&self) -> Result<()> {
+        let to_run = self.join("on-break");
+        if to_run.exists() {
+            Scripts::run("break", Command::new(to_run))?;
+        }
+
+        Ok(())
+    }
+
     fn run(name: &str, mut command: Command) -> Result<()> {
         let output = command
             .output()

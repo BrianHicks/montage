@@ -40,6 +40,12 @@ impl Opts {
                 store
                     .write()
                     .wrap_err("could not write state after starting break")?;
+
+                if let Some(scripts) = &self.scripts {
+                    scripts
+                        .on_break()
+                        .wrap_err("failed to run start script after starting")?;
+                }
             }
             Command::Stop => {
                 store.stop();
