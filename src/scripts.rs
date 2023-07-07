@@ -25,7 +25,7 @@ impl Scripts {
             let mut command = Command::new(to_run);
             command.arg(name);
 
-            Scripts::run("start", command)?;
+            Scripts::run("on-start", command)?;
         }
 
         Ok(())
@@ -34,7 +34,7 @@ impl Scripts {
     pub fn on_break(&self) -> Result<()> {
         let to_run = self.join("on-break");
         if to_run.exists() {
-            Scripts::run("break", Command::new(to_run))?;
+            Scripts::run("on-break", Command::new(to_run))?;
         }
 
         Ok(())
@@ -43,7 +43,7 @@ impl Scripts {
     pub fn on_stop(&self) -> Result<()> {
         let to_run = self.join("on-stop");
         if to_run.exists() {
-            Scripts::run("stop", Command::new(to_run))?;
+            Scripts::run("on-stop", Command::new(to_run))?;
         }
 
         Ok(())
