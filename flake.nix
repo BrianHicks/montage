@@ -13,12 +13,19 @@
         devShell =
           pkgs.mkShell {
             packages = [
+              # for the program itself
               pkgs.cargo
               pkgs.clippy
               pkgs.rustc
               pkgs.rustfmt
               pkgs.libiconv
               pkgs.rust-analyzer
+
+              # for the OmniFocus scripts
+              pkgs.nodePackages.npm
+              pkgs.nodePackages.prettier
+              pkgs.nodePackages.typescript
+              pkgs.nodePackages.typescript-language-server
             ];
           };
       }
