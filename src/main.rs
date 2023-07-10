@@ -6,12 +6,7 @@ use rand::seq::SliceRandom;
 mod scripts;
 mod state;
 
-static THINGS_TO_SAY: [&'static str; 4] = [
-    "hey",
-    "pick a new task",
-    "Brian",
-    "time for a break?"
-];
+static THINGS_TO_SAY: [&'static str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -169,8 +164,7 @@ fn main() -> Result<()> {
         // completes the builder.
         .finish();
 
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("setting default subscriber failed");
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     color_eyre::install()?;
 

@@ -104,8 +104,7 @@ impl Store {
     pub fn reload(&mut self) -> Result<()> {
         let state_bytes =
             std::fs::read_to_string(&self.loaded_from).wrap_err("could not read state file")?;
-        self.state =
-            serde_json::from_str(&state_bytes).wrap_err("could not deserialize state")?;
+        self.state = serde_json::from_str(&state_bytes).wrap_err("could not deserialize state")?;
 
         Ok(())
     }
