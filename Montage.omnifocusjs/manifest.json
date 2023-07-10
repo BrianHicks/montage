@@ -1,0 +1,13 @@
+{
+  "author": "Brian Hicks",
+  "identifier": "zone.bytes.montage",
+  "defaultLocale": "en",
+  "version": "1.0",
+  "description": "Work with Montage from OmniFocus",
+  "actions": [
+    {
+      "image": "clock",
+      "identifier": "start"
+    }
+  ]
+}
