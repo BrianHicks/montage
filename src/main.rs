@@ -105,7 +105,13 @@ impl Opts {
                                 let what_to_say = THINGS_TO_SAY.choose(&mut rng).unwrap();
                                 std::process::Command::new("say").arg(what_to_say).spawn()?;
                             }
-                            println!("{}", Self::humanize_duration(beep_after - now));
+
+                            let current = match &store.state {
+                                state::State::NothingIsHappening {} => "nothing",
+                                state::State::OnBreak {..} => "break",
+                                state::State::Running { task, .. } => &task,
+                            };
+                            tracing::info!(current=current, "{}", Self::humanize_duration(beep_after - now));
                         },
                     }
                 }
