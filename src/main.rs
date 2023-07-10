@@ -90,7 +90,7 @@ impl Opts {
                             Ok(()) => {
                                 store.reload().wrap_err("could not reload store")?;
                             },
-                            Err(err) => println!("err: {:#?}", err),
+                            Err(err) => tracing::error!(err=?err, "error receiving store events"),
                         },
                         recv(tick_events) -> _msg => {
                             let now = Local::now();

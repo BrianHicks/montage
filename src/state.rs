@@ -121,7 +121,7 @@ impl Store {
                     None,
                     move |event_res| match event_res {
                         Ok(_) => send.send(()).unwrap(),
-                        Err(err) => eprintln!("error in watcher: {:?}", err),
+                        Err(err) => tracing::error!(err=?err, "error in watcher"),
                     },
                 )
                 .wrap_err("could not start file watcher")?;
