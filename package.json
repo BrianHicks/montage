@@ -1,0 +1,11 @@
+{
+  "name": "montage",
+  "version": "1.0.0",
+  "description": "You know montages, right? Sylvester Stalone punching meat and running up stairs? That kinda thing. Where you make progress *snap* like that. The real world doesn't work like that, which sucks, so I Frankensteined this custom software together to keep me on track with whimsy and verve (me or the software? You'll never know!)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
