@@ -8,7 +8,7 @@ struct Query;
 #[Object]
 impl Query {
     async fn version(&self) -> &'static str {
-        "0.1"
+        env!("CARGO_PKG_VERSION")
     }
 }
 
