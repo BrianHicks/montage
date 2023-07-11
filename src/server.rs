@@ -1,8 +1,8 @@
 use warp::Filter;
 
 #[tokio::main]
-pub async fn main() {
+pub async fn serve(addr: std::net::IpAddr, port: u16) {
     let hello = warp::path!("hello" / String).map(|name| format!("Hello, {name}!"));
 
-    warp::serve(hello).run(([127, 0, 0, 1], 3030)).await;
+    warp::serve(hello).run((addr, port)).await;
 }

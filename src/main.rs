@@ -115,8 +115,8 @@ impl Opts {
                     }
                 }
             }
-            Command::Serve => {
-                server::main()
+            Command::Serve { addr, port } => {
+                server::serve(*addr, *port)
             }
         }
 
@@ -162,7 +162,15 @@ enum Command {
     Vex,
 
     /// Start the server, which enables the rest of the features!
-    Serve,
+    Serve {
+        /// The address to bind to
+        #[arg(long, default_value = "127.0.0.1")]
+        addr: std::net::IpAddr,
+
+        /// The port to bind to
+        #[arg(long, default_value = "3030")]
+        port: u16,
+    },
 }
 
 fn main() -> Result<()> {
