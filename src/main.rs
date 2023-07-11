@@ -4,8 +4,8 @@ use color_eyre::eyre::{Result, WrapErr};
 use rand::seq::SliceRandom;
 
 mod scripts;
-mod state;
 mod server;
+mod state;
 
 static THINGS_TO_SAY: [&'static str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
@@ -112,6 +112,9 @@ impl Opts {
                     }
                 }
             }
+            Command::Serve => {
+                server::main()
+            }
         }
 
         Ok(())
@@ -154,6 +157,9 @@ enum Command {
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
     Vex,
+
+    /// Start the server, which enables the rest of the features!
+    Serve,
 }
 
 fn main() -> Result<()> {
