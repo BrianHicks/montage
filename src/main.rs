@@ -5,6 +5,7 @@ use rand::seq::SliceRandom;
 
 mod scripts;
 mod state;
+mod server;
 
 static THINGS_TO_SAY: [&'static str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
