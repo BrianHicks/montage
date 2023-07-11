@@ -178,8 +178,6 @@ fn main() -> Result<()> {
 
     let opts = Opts::parse();
 
-    println!("{:#?}", opts);
-
     // a builder for `FmtSubscriber`.
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
