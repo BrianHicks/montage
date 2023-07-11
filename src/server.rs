@@ -1,3 +1,4 @@
+use async_graphql::http::graphiql_source;
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
 use std::convert::Infallible;
 use warp::Filter;
@@ -26,5 +27,8 @@ pub async fn serve(addr: std::net::IpAddr, port: u16) {
         },
     );
 
-    warp::serve(graphql).run((addr, port)).await;
+    let graphiql =
+        warp::path("graphiql").map(|| warp::reply::html(graphiql_source("graphql", None)));
+
+    warp::serve(graphql.or(graphiql)).run((addr, port)).await;
 }
