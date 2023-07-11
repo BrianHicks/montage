@@ -17,6 +17,9 @@ struct Opts {
 
     #[arg(long, env = "MONTAGE_SCRIPTS", global = true, value_parser = scripts::value_parser)]
     scripts: Option<scripts::Scripts>,
+
+    #[arg(long, env = "MONTAGE_LOG_LEVEL", global = true, default_value = "INFO")]
+    log_level: tracing::Level,
 }
 
 impl Opts {
@@ -163,19 +166,21 @@ enum Command {
 }
 
 fn main() -> Result<()> {
+    color_eyre::install()?;
+
+    let opts = Opts::parse();
+
+    println!("{:#?}", opts);
+
     // a builder for `FmtSubscriber`.
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
         // will be written to stdout.
-        .with_max_level(tracing::Level::TRACE)
+        .with_max_level(opts.log_level)
         // completes the builder.
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    color_eyre::install()?;
-
-    Opts::parse().run()?;
-
-    Ok(())
+    opts.run()
 }
