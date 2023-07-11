@@ -1,40 +1,31 @@
-use juniper::{EmptyMutation, EmptySubscription, RootNode};
+use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+use std::convert::Infallible;
 use warp::Filter;
-
-struct Context {}
-
-impl juniper::Context for Context {}
 
 struct Query;
 
-#[juniper::graphql_object(Context = Context)]
+#[Object]
 impl Query {
-    fn api_version() -> &'static str {
+    async fn version(&self) -> &'static str {
         "0.1"
     }
 }
 
-type Schema = juniper::RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
-
-fn schema() -> Schema {
-    RootNode::new(
-        Query,
-        EmptyMutation::new(),
-        EmptySubscription::new(),
-    )
-}
+type MontageSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 
 #[tokio::main]
 pub async fn serve(addr: std::net::IpAddr, port: u16) {
     tracing::info!("Listening on {addr}:{port}");
 
-    let state = warp::any().map(|| Context {});
-    let graphql_filter = juniper_warp::make_graphql_filter(schema(), state.boxed());
+    let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
 
-    let graphiql = warp::path("graphiql").and(juniper_warp::graphiql_filter("/graphql", None));
-    let graphql = warp::path("graphql").and(graphql_filter);
+    let graphql = async_graphql_warp::graphql(schema).and_then(
+        |(schema, request): (MontageSchema, async_graphql::Request)| async move {
+            Ok::<_, Infallible>(async_graphql_warp::GraphQLResponse::from(
+                schema.execute(request).await,
+            ))
+        },
+    );
 
-    warp::serve(graphiql.or(graphql))
-        .run((addr, port))
-        .await;
+    warp::serve(graphql).run((addr, port)).await;
 }
