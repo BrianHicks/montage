@@ -17,7 +17,9 @@ type MontageSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 pub async fn serve(addr: std::net::IpAddr, port: u16) {
     tracing::info!("Listening on {addr}:{port}");
 
-    let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
+    let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+        .extension(async_graphql::extensions::Tracing)
+        .finish();
 
     let graphql = async_graphql_warp::graphql(schema).and_then(
         |(schema, request): (MontageSchema, async_graphql::Request)| async move {
