@@ -21,9 +21,8 @@ pub async fn serve(addr: std::net::IpAddr, port: u16) {
 
     let graphql = async_graphql_warp::graphql(schema).and_then(
         |(schema, request): (MontageSchema, async_graphql::Request)| async move {
-            Ok::<_, Infallible>(async_graphql_warp::GraphQLResponse::from(
-                schema.execute(request).await,
-            ))
+            let resp = schema.execute(request).await;
+            Ok::<_, Infallible>(async_graphql_warp::GraphQLResponse::from(resp))
         },
     );
 
