@@ -1,16 +1,10 @@
+mod query;
+
 use async_graphql::http::graphiql_source;
-use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+use async_graphql::{EmptyMutation, EmptySubscription, Schema};
+use query::Query;
 use std::convert::Infallible;
 use warp::Filter;
-
-struct Query;
-
-#[Object]
-impl Query {
-    async fn version(&self) -> &'static str {
-        env!("CARGO_PKG_VERSION")
-    }
-}
 
 type MontageSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 
