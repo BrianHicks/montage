@@ -6,9 +6,10 @@ use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use rand::seq::SliceRandom;
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
@@ -25,7 +26,7 @@ struct Opts {
     log_level: tracing::Level,
 
     #[arg(long, env = "MONTAGE_DB", global = true)]
-    db: Option<PathBuf>,
+    db_dir: Option<PathBuf>,
 }
 
 impl Opts {
@@ -139,8 +140,11 @@ impl Opts {
 
     async fn open_sqlite_database(&self) -> Result<Pool<Sqlite>> {
         // TODO: could we get rid of the to_owned calls somehow?
-        let db_dir = match &self.db {
-            Some(db) => db.to_owned(),
+        let db_dir = match &self.db_dir {
+            Some(db) => db
+                .parent()
+                .map(|parent| parent.to_owned())
+                .unwrap_or_else(|| PathBuf::from(".")),
             None => directories::ProjectDirs::from("zone", "bytes", "montage")
                 .ok_or(eyre!("could not determine config location"))?
                 .data_local_dir()
@@ -151,10 +155,16 @@ impl Opts {
             std::fs::create_dir_all(&db_dir).wrap_err("could not create database directory")?;
         }
 
+        let db_path = format!("sqlite://{}", db_dir.join("montage.sqlite3").display());
+
+        let connection_options = SqliteConnectOptions::from_str(&db_path)?.create_if_missing(true);
+
         SqlitePoolOptions::new()
-            .connect(&db_dir.join("montage.sqlite3").to_string_lossy())
+            .connect_with(connection_options)
             .await
-            .wrap_err("could not make connection to sqlite database")
+            .wrap_err_with(|| {
+                format!("could not make connection to sqlite database at `{db_path}`",)
+            })
     }
 }
 
