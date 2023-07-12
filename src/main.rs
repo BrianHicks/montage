@@ -159,12 +159,19 @@ impl Opts {
 
         let connection_options = SqliteConnectOptions::from_str(&db_path)?.create_if_missing(true);
 
-        SqlitePoolOptions::new()
+        let pool = SqlitePoolOptions::new()
             .connect_with(connection_options)
             .await
             .wrap_err_with(|| {
                 format!("could not make connection to sqlite database at `{db_path}`",)
-            })
+            })?;
+
+        sqlx::migrate!("db/migrations")
+            .run(&pool)
+            .await
+            .wrap_err("could not run migrations")?;
+
+        Ok(pool)
     }
 }
 
