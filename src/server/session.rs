@@ -35,8 +35,13 @@ impl Session {
         self.start_time + self.duration
     }
 
-    async fn remaining_time(&self) -> Duration {
-        self.start_time + self.duration - Local::now()
+    /// If the session is in progress, how much time is left?
+    async fn remaining_time(&self) -> Option<Duration> {
+        if self.end_time.is_some() {
+            None
+        } else {
+            Some(self.start_time + self.duration - Local::now())
+        }
     }
 }
 
