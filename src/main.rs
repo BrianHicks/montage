@@ -7,7 +7,7 @@ mod scripts;
 mod server;
 mod state;
 
-static THINGS_TO_SAY: [&'static str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
+static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -108,7 +108,7 @@ impl Opts {
                             let current = match &store.state {
                                 state::State::NothingIsHappening {} => "nothing",
                                 state::State::OnBreak {..} => "break",
-                                state::State::Running { task, .. } => &task,
+                                state::State::Running { task, .. } => task,
                             };
                             tracing::info!(current=current, "{}", Self::humanize_duration(beep_after - now));
                         },

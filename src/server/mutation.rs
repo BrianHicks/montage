@@ -19,7 +19,7 @@ impl Mutation {
             chrono::DateTime<chrono::Local>,
         >,
     ) -> Result<Session> {
-        let start = start_time.unwrap_or_else(|| chrono::Local::now());
+        let start = start_time.unwrap_or_else(chrono::Local::now);
 
         Ok(Session {
             id: 0,
