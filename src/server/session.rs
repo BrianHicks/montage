@@ -78,11 +78,16 @@ impl Session {
         .map_err(Error::QueryError)
     }
 
-    pub async fn current_session(conn: &Pool<Sqlite>) -> Result<Option<Self>> {
+    pub async fn current_session(pool: &Pool<Sqlite>) -> Result<Option<Self>> {
         sqlx::query_as::<_, Self>(
-            "SELECT id, kind, description, start_time, duration, end_time FROM sessions LIMIT 1",
+            indoc! {"
+                SELECT *
+                FROM sessions
+                ORDER BY start_time DESC
+                LIMIT 1
+            "}
         )
-        .fetch_optional(conn)
+        .fetch_optional(pool)
         .await
         .map_err(Error::QueryError)
     }
@@ -122,6 +127,26 @@ mod test {
         let current_session = Session::current_session(&pool).await.unwrap();
 
         assert_eq!(current_session, Some(new_session));
+    }
+
+    #[tokio::test]
+    async fn current_session_gets_the_most_recent_session() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let next = now + Duration::minutes(5);
+
+        Session::start(&pool, Kind::Task, "foo".into(), now, Duration::minutes(25))
+            .await
+            .unwrap();
+
+        let session_2 =
+            Session::start(&pool, Kind::Task, "foo".into(), next, Duration::minutes(25))
+                .await
+                .unwrap();
+
+        let current_session = Session::current_session(&pool).await.unwrap();
+
+        assert_eq!(current_session.map(|s| s.id), Some(session_2.id))
     }
 
     #[tokio::test]
