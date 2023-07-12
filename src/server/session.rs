@@ -5,19 +5,32 @@ use chrono::{DateTime, Duration, Local};
 use indoc::indoc;
 use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
 
+/// A session, either currently-running or historical
 #[derive(SimpleObject, Debug, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Session {
+    #[graphql(skip)]
     pub id: i64,
+
+    /// What kind of session is this?
     pub kind: Kind,
+
+    /// What's going on in this session?
     pub description: String,
+
+    /// When did this session start?
     pub start_time: DateTime<Local>,
+
+    /// How much time have we committed to this session?
     pub duration: Duration,
+
+    /// If the session is over, when did it end?
     pub end_time: Option<DateTime<Local>>,
 }
 
 #[ComplexObject]
 impl Session {
+    /// When is/was the session projected to end?
     async fn projected_end_time(&self) -> DateTime<Local> {
         self.start_time + self.duration
     }
