@@ -38,12 +38,12 @@ impl Mutation {
     }
 
     /// Extend the current session by a set amount of time
-    async fn extend(
+    async fn extend_by(
         &self,
         context: &Context<'_>,
         #[graphql(desc = "How much time to add?")] duration: chrono::Duration,
     ) -> Result<Session> {
-        Session::extend(context.data().map_err(Error::ContextError)?, duration).await
+        Session::extend_by(context.data().map_err(Error::ContextError)?, duration).await
     }
 
     /// Set the duration of the current session so it will be projected to end at the exact moment you specify

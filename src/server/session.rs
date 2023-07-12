@@ -98,7 +98,7 @@ impl Session {
         Ok(res)
     }
 
-    pub async fn extend(pool: &Pool<Sqlite>, duration: Duration) -> Result<Self> {
+    pub async fn extend_by(pool: &Pool<Sqlite>, duration: Duration) -> Result<Self> {
         Self::update_duration(pool, |current| current.duration + duration).await
     }
 
@@ -230,7 +230,7 @@ mod test {
     async fn you_cant_extend_a_session_that_doesnt_exist() {
         let pool = get_pool().await;
 
-        match Session::extend(&pool, Duration::minutes(5)).await {
+        match Session::extend_by(&pool, Duration::minutes(5)).await {
             Err(Error::NoCurrentSession) => (),
             other => panic!("expected NoCurrentSession, got {other:?}"),
         }
@@ -247,7 +247,7 @@ mod test {
             .await
             .unwrap();
 
-        let extended_session = Session::extend(&pool, extension).await.unwrap();
+        let extended_session = Session::extend_by(&pool, extension).await.unwrap();
 
         assert_eq!(
             extended_session.duration,
