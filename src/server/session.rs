@@ -1,3 +1,4 @@
+use super::error::{Error, Result};
 use super::kind::Kind;
 use async_graphql::SimpleObject;
 use chrono::{DateTime, Duration, Local};
@@ -50,12 +51,13 @@ impl Session {
         description: &str,
         start_time: DateTime<Local>,
         duration: Duration,
-    ) -> sqlx::Result<Self> {
+    ) -> Result<Self> {
         let closed_existing_sessions_receipt =
             sqlx::query("UPDATE sessions SET end_time = ? WHERE end_time IS NULL")
                 .bind(start_time)
                 .execute(pool)
-                .await?;
+                .await
+                .map_err(Error::QueryError)?;
 
         tracing::debug!(
             count = closed_existing_sessions_receipt.rows_affected(),
@@ -73,14 +75,16 @@ impl Session {
         .bind(duration.to_string())
         .fetch_one(pool)
         .await
+        .map_err(Error::QueryError)
     }
 
-    pub async fn current_session(conn: &Pool<Sqlite>) -> sqlx::Result<Option<Self>> {
+    pub async fn current_session(conn: &Pool<Sqlite>) -> Result<Option<Self>> {
         sqlx::query_as::<_, Self>(
             "SELECT id, kind, description, start_time, duration, end_time FROM sessions LIMIT 1",
         )
         .fetch_optional(conn)
         .await
+        .map_err(Error::QueryError)
     }
 }
 

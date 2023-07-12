@@ -1,6 +1,6 @@
+use super::error::{Error, Result};
 use super::session::Session;
 use async_graphql::{Context, Object};
-use sqlx::{Pool, Sqlite};
 
 pub struct Query;
 
@@ -10,8 +10,7 @@ impl Query {
         env!("CARGO_PKG_VERSION")
     }
 
-    async fn current_session(&self, context: &Context<'_>) -> sqlx::Result<Option<Session>> {
-        let data = context.data::<Pool<Sqlite>>().unwrap();
-        Session::current_session(data).await
+    async fn current_session(&self, context: &Context<'_>) -> Result<Option<Session>> {
+        Session::current_session(context.data().map_err(Error::ContextError)?).await
     }
 }

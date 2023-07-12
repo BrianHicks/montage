@@ -1,3 +1,4 @@
+mod error;
 mod kind;
 mod mutation;
 mod query;

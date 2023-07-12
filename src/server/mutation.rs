@@ -1,8 +1,8 @@
+use super::error::{Error, Result};
 use super::kind::Kind;
 use super::session::Session;
 use async_graphql::context::Context;
 use async_graphql::Object;
-use color_eyre::eyre::Result;
 
 #[derive(Debug)]
 pub struct Mutation;
@@ -22,18 +22,19 @@ impl Mutation {
         #[graphql(desc = "When did this session start? (Omit to start now)")] start_time: Option<
             chrono::DateTime<chrono::Local>,
         >,
-    ) -> sqlx::Result<Session> {
+    ) -> Result<Session> {
         let final_start = start_time.unwrap_or_else(chrono::Local::now);
 
         let final_duration = duration.unwrap_or_else(|| kind.default_session_length());
 
         Session::start(
-            context.data().unwrap(),
+            context.data().map_err(Error::ContextError)?,
             kind,
             &description,
             final_start,
             final_duration,
-        ).await
+        )
+        .await
     }
 
     /// Extend the current session by a set amount of time
@@ -42,11 +43,11 @@ impl Mutation {
         _ctx: &Context<'_>,
         #[graphql(desc = "How much time to add?")] _duration: chrono::Duration,
     ) -> Result<Session> {
-        color_eyre::eyre::bail!("not implemented yet");
+        Err(Error::NotImplemented)
     }
 
     /// Stop without starting a new session, like for the day or an extended break
     async fn stop(&self, _ctx: &Context<'_>) -> Result<Session> {
-        color_eyre::eyre::bail!("not implemented yet");
+        Err(Error::NotImplemented)
     }
 }
