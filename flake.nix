@@ -26,6 +26,9 @@
               pkgs.nodePackages.prettier
               pkgs.nodePackages.typescript
               pkgs.nodePackages.typescript-language-server
+
+              # misc stuff
+              pkgs.darwin.apple_sdk.frameworks.Security
             ];
           };
       }
