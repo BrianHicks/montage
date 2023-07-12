@@ -64,7 +64,7 @@ impl Session {
             "closed existing sessions"
         );
 
-        sqlx::query_as::<_, Session>(indoc! {"
+        let res = sqlx::query_as::<_, Session>(indoc! {"
             INSERT INTO sessions (kind, description, start_time, duration)
             VALUES (?, ?, ?, ?)
             RETURNING id, kind, description, start_time, duration, end_time;
@@ -75,7 +75,15 @@ impl Session {
         .bind(duration.to_string())
         .fetch_one(pool)
         .await
-        .map_err(Error::QueryError)
+        .map_err(Error::QueryError)?;
+
+        tracing::info!(
+            description = res.description,
+            kind = ?res.kind,
+            "started new session"
+        );
+
+        Ok(res)
     }
 
     pub async fn current_session(pool: &Pool<Sqlite>) -> Result<Option<Self>> {
