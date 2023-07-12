@@ -1,8 +1,6 @@
 use super::kind::Kind;
 use async_graphql::SimpleObject;
 use chrono::{DateTime, Duration, Local};
-use color_eyre::eyre::WrapErr;
-use color_eyre::Result;
 use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
 
 #[derive(SimpleObject, Debug)]

@@ -1,6 +1,5 @@
 use super::session::Session;
 use async_graphql::{Context, Object};
-use color_eyre::eyre::Result;
 use sqlx::{Pool, Sqlite};
 
 pub struct Query;
