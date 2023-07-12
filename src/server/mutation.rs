@@ -40,10 +40,7 @@ impl Mutation {
     }
 
     /// Stop without starting a new session, like for the day or an extended break
-    async fn stop(
-        &self,
-        _ctx: &Context<'_>,
-    ) -> Result<Session> {
+    async fn stop(&self, _ctx: &Context<'_>) -> Result<Session> {
         color_eyre::eyre::bail!("not implemented yet");
     }
 }
