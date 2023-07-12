@@ -59,7 +59,7 @@ impl Session {
                 .await
                 .map_err(Error::QueryError)?;
 
-        tracing::debug!(
+        tracing::info!(
             count = closed_existing_sessions_receipt.rows_affected(),
             "closed existing sessions"
         );
