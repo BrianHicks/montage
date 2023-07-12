@@ -1,16 +1,18 @@
+mod mutation;
 mod query;
 
 use async_graphql::http::graphiql_source;
-use async_graphql::{EmptyMutation, EmptySubscription, Schema};
+use async_graphql::{EmptySubscription, Schema};
+use mutation::Mutation;
 use query::Query;
 use std::convert::Infallible;
 use warp::Filter;
 
-type MontageSchema = Schema<Query, EmptyMutation, EmptySubscription>;
+type MontageSchema = Schema<Query, Mutation, EmptySubscription>;
 
 #[tokio::main]
 pub async fn serve(addr: std::net::IpAddr, port: u16) {
-    let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+    let schema = Schema::build(Query, Mutation, EmptySubscription)
         .extension(async_graphql::extensions::Tracing)
         .finish();
 
