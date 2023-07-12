@@ -1,6 +1,6 @@
 use super::error::{Error, Result};
 use super::kind::Kind;
-use async_graphql::{SimpleObject, ComplexObject};
+use async_graphql::{ComplexObject, SimpleObject};
 use chrono::{DateTime, Duration, Local};
 use indoc::indoc;
 use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
@@ -98,10 +98,7 @@ impl Session {
         Ok(res)
     }
 
-    pub async fn extend(
-        pool: &Pool<Sqlite>,
-        duration: Duration,
-    ) -> Result<Self> {
+    pub async fn extend(pool: &Pool<Sqlite>, duration: Duration) -> Result<Self> {
         let mut current = match Self::current_session(pool).await? {
             Some(session) => session,
             None => return Err(Error::NoCurrentSession),
@@ -109,13 +106,12 @@ impl Session {
 
         let new_duration = current.duration + duration;
 
-        let receipt =
-            sqlx::query("UPDATE sessions SET duration = ? WHERE id = ?")
-                .bind(new_duration.to_string())
-                .bind(current.id)
-                .execute(pool)
-                .await
-                .map_err(Error::QueryError)?;
+        let receipt = sqlx::query("UPDATE sessions SET duration = ? WHERE id = ?")
+            .bind(new_duration.to_string())
+            .bind(current.id)
+            .execute(pool)
+            .await
+            .map_err(Error::QueryError)?;
 
         debug_assert!(receipt.rows_affected() == 1);
 
@@ -240,10 +236,11 @@ mod test {
             .await
             .unwrap();
 
-        let extended_session = Session::extend(&pool, extension)
-            .await
-            .unwrap();
+        let extended_session = Session::extend(&pool, extension).await.unwrap();
 
-        assert_eq!(extended_session.duration, original_session.duration + extension)
+        assert_eq!(
+            extended_session.duration,
+            original_session.duration + extension
+        )
     }
 }
