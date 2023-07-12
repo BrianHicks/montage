@@ -1,9 +1,10 @@
 use super::kind::Kind;
 use async_graphql::SimpleObject;
 use chrono::{DateTime, Duration, Local};
+use indoc::indoc;
 use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
 
-#[derive(SimpleObject, Debug)]
+#[derive(SimpleObject, Debug, PartialEq, Eq)]
 pub struct Session {
     pub id: i64,
     pub kind: Kind,
@@ -43,11 +44,68 @@ impl FromRow<'_, SqliteRow> for Session {
 }
 
 impl Session {
+    pub async fn start(
+        pool: &Pool<Sqlite>,
+        kind: Kind,
+        description: &str,
+        start_time: DateTime<Local>,
+        duration: Duration,
+    ) -> sqlx::Result<Self> {
+        sqlx::query_as::<_, Session>(indoc! {"
+            INSERT INTO sessions (kind, description, start_time, duration)
+            VALUES (?, ?, ?, ?)
+            RETURNING id, kind, description, start_time, duration, end_time;
+        "})
+        .bind(kind)
+        .bind(description)
+        .bind(start_time)
+        .bind(duration.to_string())
+        .fetch_one(pool)
+        .await
+    }
+
     pub async fn current_session(conn: &Pool<Sqlite>) -> sqlx::Result<Option<Self>> {
         sqlx::query_as::<_, Self>(
             "SELECT id, kind, description, start_time, duration, end_time FROM sessions LIMIT 1",
         )
         .fetch_optional(conn)
         .await
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use sqlx::sqlite::SqlitePoolOptions;
+
+    async fn get_pool() -> Pool<Sqlite> {
+        let pool = SqlitePoolOptions::new().connect(":memory:").await.unwrap();
+
+        sqlx::migrate!("db/migrations").run(&pool).await.unwrap();
+
+        pool
+    }
+
+    #[tokio::test]
+    async fn current_session_gets_nothing_in_empty_database() {
+        let pool = get_pool().await;
+
+        let current = Session::current_session(&pool).await.unwrap();
+
+        assert_eq!(current, None);
+    }
+
+    #[tokio::test]
+    async fn current_session_gets_a_started_session() {
+        let pool = get_pool().await;
+        let now = Local::now();
+
+        let new_session =
+            Session::start(&pool, Kind::Task, "foo".into(), now, Duration::minutes(25))
+                .await
+                .unwrap();
+        let current_session = Session::current_session(&pool).await.unwrap();
+
+        assert_eq!(current_session, Some(new_session));
     }
 }

@@ -1172,6 +1172,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "indoc"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "761cde40c27e2a9877f8c928fd248b7eec9dd48623dd514b256858ca593fbba7"
+
+[[package]]
 name = "inotify"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1404,6 +1410,7 @@ dependencies = [
  "color-eyre",
  "crossbeam-channel",
  "directories",
+ "indoc",
  "iso8601",
  "notify",
  "notify-debouncer-mini",

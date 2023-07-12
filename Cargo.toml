@@ -13,6 +13,7 @@ clap = { version = "4.3.11", features = ["derive", "cargo", "env"] }
 color-eyre = "0.6.2"
 crossbeam-channel = "0.5.8"
 directories = "5.0.1"
+indoc = "2.0.2"
 iso8601 = "0.6.1"
 notify = { version = "6.0.1", features = ["macos_kqueue"] }
 notify-debouncer-mini = "0.3.0"
