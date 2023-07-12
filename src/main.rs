@@ -8,6 +8,7 @@ use color_eyre::eyre::{eyre, Result, WrapErr};
 use rand::seq::SliceRandom;
 use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::{Pool, Sqlite};
+use std::path::PathBuf;
 
 static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
@@ -22,10 +23,13 @@ struct Opts {
 
     #[arg(long, env = "MONTAGE_LOG_LEVEL", global = true, default_value = "INFO")]
     log_level: tracing::Level,
+
+    #[arg(long, env = "MONTAGE_DB", global = true)]
+    db: Option<PathBuf>,
 }
 
 impl Opts {
-    fn run(&self) -> Result<()> {
+    async fn run(&self) -> Result<()> {
         let mut store = state::Store::create_or_load()?;
 
         match &self.command {
@@ -118,7 +122,7 @@ impl Opts {
                 }
             }
             Command::Serve { addr, port } => {
-                server::serve(self.open_sqlite_database()?, *addr, *port)?
+                server::serve(self.open_sqlite_database().await?, *addr, *port).await?
             }
         }
 
@@ -133,18 +137,23 @@ impl Opts {
         }
     }
 
-    fn open_sqlite_database(&self) -> Result<Pool<Sqlite>> {
-        let db_dir = directories::ProjectDirs::from("zone", "bytes", "montage")
-            .ok_or(eyre!("could not determine config location"))?
-            .data_local_dir()
-            .to_owned();
+    async fn open_sqlite_database(&self) -> Result<Pool<Sqlite>> {
+        // TODO: could we get rid of the to_owned calls somehow?
+        let db_dir = match &self.db {
+            Some(db) => db.to_owned(),
+            None => directories::ProjectDirs::from("zone", "bytes", "montage")
+                .ok_or(eyre!("could not determine config location"))?
+                .data_local_dir()
+                .to_owned(),
+        };
 
         if !db_dir.exists() {
             std::fs::create_dir_all(&db_dir).wrap_err("could not create database directory")?;
         }
 
         SqlitePoolOptions::new()
-            .connect_lazy(&db_dir.join("montage.sqlite3").to_string_lossy())
+            .connect(&db_dir.join("montage.sqlite3").to_string_lossy())
+            .await
             .wrap_err("could not make connection to sqlite database")
     }
 }
@@ -190,7 +199,8 @@ enum Command {
     },
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     color_eyre::install()?;
 
     let opts = Opts::parse();
@@ -205,5 +215,5 @@ fn main() -> Result<()> {
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    opts.run()
+    opts.run().await
 }

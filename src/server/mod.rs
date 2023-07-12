@@ -14,7 +14,6 @@ use warp::Filter;
 
 type MontageSchema = Schema<Query, Mutation, EmptySubscription>;
 
-#[tokio::main]
 pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Result<()> {
     sqlx::migrate!("db/migrations").run(&pool).await?;
 
