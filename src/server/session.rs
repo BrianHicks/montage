@@ -1,11 +1,12 @@
 use super::error::{Error, Result};
 use super::kind::Kind;
-use async_graphql::SimpleObject;
+use async_graphql::{SimpleObject, ComplexObject};
 use chrono::{DateTime, Duration, Local};
 use indoc::indoc;
 use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
 
 #[derive(SimpleObject, Debug, PartialEq, Eq)]
+#[graphql(complex)]
 pub struct Session {
     pub id: i64,
     pub kind: Kind,
@@ -13,6 +14,17 @@ pub struct Session {
     pub start_time: DateTime<Local>,
     pub duration: Duration,
     pub end_time: Option<DateTime<Local>>,
+}
+
+#[ComplexObject]
+impl Session {
+    async fn projected_end_time(&self) -> DateTime<Local> {
+        self.start_time + self.duration
+    }
+
+    async fn remaining_time(&self) -> Duration {
+        self.start_time + self.duration - Local::now()
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
