@@ -1,5 +1,6 @@
 mod mutation;
 mod query;
+mod session;
 
 use async_graphql::http::graphiql_source;
 use async_graphql::{EmptySubscription, Schema};
