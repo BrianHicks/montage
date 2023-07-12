@@ -79,14 +79,12 @@ impl Session {
     }
 
     pub async fn current_session(pool: &Pool<Sqlite>) -> Result<Option<Self>> {
-        sqlx::query_as::<_, Self>(
-            indoc! {"
-                SELECT *
-                FROM sessions
-                ORDER BY start_time DESC
-                LIMIT 1
-            "}
-        )
+        sqlx::query_as::<_, Self>(indoc! {"
+            SELECT *
+            FROM sessions
+            ORDER BY start_time DESC
+            LIMIT 1
+        "})
         .fetch_optional(pool)
         .await
         .map_err(Error::QueryError)
