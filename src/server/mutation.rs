@@ -45,9 +45,4 @@ impl Mutation {
     ) -> Result<Session> {
         Err(Error::NotImplemented)
     }
-
-    /// Stop without starting a new session, like for the day or an extended break
-    async fn stop(&self, _ctx: &Context<'_>) -> Result<Session> {
-        Err(Error::NotImplemented)
-    }
 }
