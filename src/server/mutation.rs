@@ -29,4 +29,21 @@ impl Mutation {
             end_time: start + duration,
         })
     }
+
+    /// Extend the current session by a set amount of time
+    async fn extend(
+        &self,
+        _ctx: &Context<'_>,
+        #[graphql(desc = "How much time to add?")] _duration: chrono::Duration,
+    ) -> Result<Session> {
+        color_eyre::eyre::bail!("not implemented yet");
+    }
+
+    /// Stop without starting a new session, like for the day or an extended break
+    async fn stop(
+        &self,
+        _ctx: &Context<'_>,
+    ) -> Result<Session> {
+        color_eyre::eyre::bail!("not implemented yet");
+    }
 }
