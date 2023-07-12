@@ -20,6 +20,7 @@
               pkgs.rustfmt
               pkgs.libiconv
               pkgs.rust-analyzer
+              pkgs.sqlx-cli
 
               # for the OmniFocus scripts
               pkgs.nodePackages.npm
