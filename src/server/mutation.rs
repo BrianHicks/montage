@@ -25,10 +25,7 @@ impl Mutation {
     ) -> Result<Session> {
         let final_start = start_time.unwrap_or_else(chrono::Local::now);
 
-        let final_duration = duration.unwrap_or_else(|| match kind {
-            Kind::Task => chrono::Duration::minutes(25),
-            Kind::Break => chrono::Duration::minutes(5),
-        });
+        let final_duration = duration.unwrap_or_else(|| kind.default_session_length());
 
         Ok(Session {
             id: 0,
