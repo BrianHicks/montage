@@ -16,6 +16,8 @@ type MontageSchema = Schema<Query, Mutation, EmptySubscription>;
 pub async fn serve(addr: std::net::IpAddr, port: u16) -> Result<()> {
     let pool = sqlite::SqlitePoolOptions::new().connect(":memory:").await?;
 
+    sqlx::migrate!("db/migrations").run(&pool).await?;
+
     let schema = Schema::build(Query, Mutation, EmptySubscription)
         .extension(async_graphql::extensions::Tracing)
         .data(pool)
