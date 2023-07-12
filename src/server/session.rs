@@ -99,12 +99,23 @@ impl Session {
     }
 
     pub async fn extend(pool: &Pool<Sqlite>, duration: Duration) -> Result<Self> {
+        Self::update_duration(pool, |current| current.duration + duration).await
+    }
+
+    pub async fn extend_to(pool: &Pool<Sqlite>, target: DateTime<Local>) -> Result<Self> {
+        Self::update_duration(pool, |current| target - current.start_time).await
+    }
+
+    async fn update_duration<F>(pool: &Pool<Sqlite>, get_new_duration: F) -> Result<Self>
+    where
+        F: FnOnce(&Session) -> Duration,
+    {
         let mut current = match Self::current_session(pool).await? {
             Some(session) => session,
             None => return Err(Error::NoCurrentSession),
         };
 
-        let new_duration = current.duration + duration;
+        let new_duration = get_new_duration(&current);
 
         let receipt = sqlx::query("UPDATE sessions SET duration = ? WHERE id = ?")
             .bind(new_duration.to_string())
@@ -237,6 +248,27 @@ mod test {
             .unwrap();
 
         let extended_session = Session::extend(&pool, extension).await.unwrap();
+
+        assert_eq!(
+            extended_session.duration,
+            original_session.duration + extension
+        )
+    }
+
+    #[tokio::test]
+    async fn extending_a_session_to_a_date_sets_the_duration() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+        let extension = Duration::minutes(5);
+
+        let original_session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+
+        let extended_session = Session::extend_to(&pool, now + duration + extension)
+            .await
+            .unwrap();
 
         assert_eq!(
             extended_session.duration,

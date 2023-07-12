@@ -45,4 +45,13 @@ impl Mutation {
     ) -> Result<Session> {
         Session::extend(context.data().map_err(Error::ContextError)?, duration).await
     }
+
+    /// Set the duration of the current session so it will be projected to end at the exact moment you specify
+    async fn extend_to(
+        &self,
+        context: &Context<'_>,
+        #[graphql(desc = "When to extend to?")] target: chrono::DateTime<chrono::Local>,
+    ) -> Result<Session> {
+        Session::extend_to(context.data().map_err(Error::ContextError)?, target).await
+    }
 }
