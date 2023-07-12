@@ -115,9 +115,7 @@ impl Opts {
                     }
                 }
             }
-            Command::Serve { addr, port } => {
-                server::serve(*addr, *port)
-            }
+            Command::Serve { addr, port } => server::serve(*addr, *port),
         }
 
         Ok(())
