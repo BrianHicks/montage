@@ -1,11 +1,13 @@
-use chrono::{Duration, Local};
-use clap::Parser;
-use color_eyre::eyre::{Result, WrapErr};
-use rand::seq::SliceRandom;
-
 mod scripts;
 mod server;
 mod state;
+
+use chrono::{Duration, Local};
+use clap::Parser;
+use color_eyre::eyre::{eyre, Result, WrapErr};
+use rand::seq::SliceRandom;
+use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::{Pool, Sqlite};
 
 static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
@@ -115,7 +117,9 @@ impl Opts {
                     }
                 }
             }
-            Command::Serve { addr, port } => server::serve(*addr, *port)?,
+            Command::Serve { addr, port } => {
+                server::serve(self.open_sqlite_database()?, *addr, *port)?
+            }
         }
 
         Ok(())
@@ -127,6 +131,21 @@ impl Opts {
             1 => format!("1 minute, {} seconds", duration.num_seconds() - 60),
             more => format!("{} minutes", more + 1),
         }
+    }
+
+    fn open_sqlite_database(&self) -> Result<Pool<Sqlite>> {
+        let db_dir = directories::ProjectDirs::from("zone", "bytes", "montage")
+            .ok_or(eyre!("could not determine config location"))?
+            .data_local_dir()
+            .to_owned();
+
+        if !db_dir.exists() {
+            std::fs::create_dir_all(&db_dir).wrap_err("could not create database directory")?;
+        }
+
+        SqlitePoolOptions::new()
+            .connect_lazy(&db_dir.join("montage.sqlite3").to_string_lossy())
+            .wrap_err("could not make connection to sqlite database")
     }
 }
 

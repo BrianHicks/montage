@@ -8,16 +8,14 @@ use async_graphql::{EmptySubscription, Schema};
 use color_eyre::eyre::Result;
 use mutation::Mutation;
 use query::Query;
-use sqlx::sqlite;
+use sqlx::{Pool, Sqlite};
 use std::convert::Infallible;
 use warp::Filter;
 
 type MontageSchema = Schema<Query, Mutation, EmptySubscription>;
 
 #[tokio::main]
-pub async fn serve(addr: std::net::IpAddr, port: u16) -> Result<()> {
-    let pool = sqlite::SqlitePoolOptions::new().connect(":memory:").await?;
-
+pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Result<()> {
     sqlx::migrate!("db/migrations").run(&pool).await?;
 
     let schema = Schema::build(Query, Mutation, EmptySubscription)
