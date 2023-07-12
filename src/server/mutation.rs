@@ -23,8 +23,8 @@ impl Mutation {
 
         Ok(Session {
             id: 0,
-            kind: kind,
-            description: description,
+            kind,
+            description,
             start_time: start,
             end_time: start + duration,
         })
