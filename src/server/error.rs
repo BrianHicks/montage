@@ -8,6 +8,6 @@ pub enum Error {
     #[error("context error: {0:?}")]
     ContextError(async_graphql::Error),
 
-    #[error("not implemented yet!")]
-    NotImplemented,
+    #[error("there is no current session")]
+    NoCurrentSession,
 }

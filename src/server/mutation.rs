@@ -40,9 +40,9 @@ impl Mutation {
     /// Extend the current session by a set amount of time
     async fn extend(
         &self,
-        _ctx: &Context<'_>,
-        #[graphql(desc = "How much time to add?")] _duration: chrono::Duration,
+        context: &Context<'_>,
+        #[graphql(desc = "How much time to add?")] duration: chrono::Duration,
     ) -> Result<Session> {
-        Err(Error::NotImplemented)
+        Session::extend(context.data().map_err(Error::ContextError)?, duration).await
     }
 }

@@ -98,6 +98,32 @@ impl Session {
         Ok(res)
     }
 
+    pub async fn extend(
+        pool: &Pool<Sqlite>,
+        duration: Duration,
+    ) -> Result<Self> {
+        let mut current = match Self::current_session(pool).await? {
+            Some(session) => session,
+            None => return Err(Error::NoCurrentSession),
+        };
+
+        let new_duration = current.duration + duration;
+
+        let receipt =
+            sqlx::query("UPDATE sessions SET duration = ? WHERE id = ?")
+                .bind(new_duration.to_string())
+                .bind(current.id)
+                .execute(pool)
+                .await
+                .map_err(Error::QueryError)?;
+
+        debug_assert!(receipt.rows_affected() == 1);
+
+        current.duration = new_duration;
+
+        Ok(current)
+    }
+
     pub async fn current_session(pool: &Pool<Sqlite>) -> Result<Option<Self>> {
         sqlx::query_as::<_, Self>(indoc! {"
             SELECT *
@@ -191,5 +217,33 @@ mod test {
 
         assert_ne!(first_session_refetched.end_time, first_session.end_time);
         assert_eq!(first_session_refetched.end_time, Some(next));
+    }
+
+    #[tokio::test]
+    async fn you_cant_extend_a_session_that_doesnt_exist() {
+        let pool = get_pool().await;
+
+        match Session::extend(&pool, Duration::minutes(5)).await {
+            Err(Error::NoCurrentSession) => (),
+            other => panic!("expected NoCurrentSession, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn extending_a_session_changes_the_duration() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+        let extension = Duration::minutes(5);
+
+        let original_session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+
+        let extended_session = Session::extend(&pool, extension)
+            .await
+            .unwrap();
+
+        assert_eq!(extended_session.duration, original_session.duration + extension)
     }
 }
