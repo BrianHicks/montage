@@ -29,9 +29,4 @@ impl Mutation {
             end_time: start + duration,
         })
     }
-
-    async fn foo(&self, ctx: &Context<'_>) -> Result<bool> {
-        tracing::info!("{:#?}", ctx.data::<sqlx::Pool<sqlx::Sqlite>>());
-        Ok(true)
-    }
 }
