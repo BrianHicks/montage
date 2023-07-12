@@ -12,7 +12,7 @@ impl Mutation {
     /// Start a new session
     async fn start(
         &self,
-        _context: &Context<'_>,
+        context: &Context<'_>,
         #[graphql(desc = "What kind of session will this be?")] kind: Kind,
         #[graphql(desc = "What will you be doing during this session?")] description: String,
         #[graphql(
@@ -22,19 +22,18 @@ impl Mutation {
         #[graphql(desc = "When did this session start? (Omit to start now)")] start_time: Option<
             chrono::DateTime<chrono::Local>,
         >,
-    ) -> Result<Session> {
+    ) -> sqlx::Result<Session> {
         let final_start = start_time.unwrap_or_else(chrono::Local::now);
 
         let final_duration = duration.unwrap_or_else(|| kind.default_session_length());
 
-        Ok(Session {
-            id: 0,
+        Session::start(
+            context.data().unwrap(),
             kind,
-            description,
-            start_time: final_start,
-            duration: final_duration,
-            end_time: None,
-        })
+            &description,
+            final_start,
+            final_duration,
+        ).await
     }
 
     /// Extend the current session by a set amount of time
