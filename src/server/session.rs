@@ -51,6 +51,17 @@ impl Session {
         start_time: DateTime<Local>,
         duration: Duration,
     ) -> sqlx::Result<Self> {
+        let closed_existing_sessions_receipt =
+            sqlx::query("UPDATE sessions SET end_time = ? WHERE end_time IS NULL")
+                .bind(start_time)
+                .execute(pool)
+                .await?;
+
+        tracing::debug!(
+            count = closed_existing_sessions_receipt.rows_affected(),
+            "closed existing sessions"
+        );
+
         sqlx::query_as::<_, Session>(indoc! {"
             INSERT INTO sessions (kind, description, start_time, duration)
             VALUES (?, ?, ?, ?)
@@ -107,5 +118,31 @@ mod test {
         let current_session = Session::current_session(&pool).await.unwrap();
 
         assert_eq!(current_session, Some(new_session));
+    }
+
+    #[tokio::test]
+    async fn starting_a_new_session_closes_existing_sessions() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(25);
+        let next = now + duration;
+
+        let first_session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+
+        Session::start(&pool, Kind::Task, "foo".into(), next, duration)
+            .await
+            .unwrap();
+
+        let first_session_refetched =
+            sqlx::query_as::<_, Session>("SELECT * FROM sessions WHERE id = ?")
+                .bind(first_session.id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+
+        assert_ne!(first_session_refetched.end_time, first_session.end_time);
+        assert_eq!(first_session_refetched.end_time, Some(next));
     }
 }
