@@ -1,3 +1,4 @@
+use super::kind::Kind;
 use super::session::Session;
 use async_graphql::context::Context;
 use async_graphql::Object;
@@ -12,21 +13,29 @@ impl Mutation {
     async fn start(
         &self,
         _context: &Context<'_>,
-        kind: String,
+        #[graphql(desc = "What kind of session will this be?")] kind: Kind,
         #[graphql(desc = "What will you be doing during this session?")] description: String,
-        #[graphql(desc = "How long will this session last?")] duration: chrono::Duration,
+        #[graphql(
+            desc = "How long will this session last? (If omitted, we'll decide based on the session type)"
+        )]
+        duration: Option<chrono::Duration>,
         #[graphql(desc = "When did this session start? (Omit to start now)")] start_time: Option<
             chrono::DateTime<chrono::Local>,
         >,
     ) -> Result<Session> {
-        let start = start_time.unwrap_or_else(chrono::Local::now);
+        let final_start = start_time.unwrap_or_else(chrono::Local::now);
+
+        let final_duration = duration.unwrap_or_else(|| match kind {
+            Kind::Task => chrono::Duration::minutes(25),
+            Kind::Break => chrono::Duration::minutes(5),
+        });
 
         Ok(Session {
             id: 0,
             kind,
             description,
-            start_time: start,
-            end_time: start + duration,
+            start_time: final_start,
+            end_time: final_start + final_duration,
         })
     }
 

@@ -1,3 +1,4 @@
+mod kind;
 mod mutation;
 mod query;
 mod session;
