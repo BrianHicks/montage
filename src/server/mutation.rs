@@ -32,7 +32,8 @@ impl Mutation {
             kind,
             description,
             start_time: final_start,
-            end_time: final_start + final_duration,
+            duration: final_duration,
+            end_time: None,
         })
     }
 
