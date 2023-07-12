@@ -125,6 +125,9 @@ impl Opts {
             Command::Serve { addr, port } => {
                 server::serve(self.open_sqlite_database().await?, *addr, *port).await?
             }
+            Command::ShowGraphqlSchema => {
+                println!("{}", server::schema().finish().sdl())
+            }
         }
 
         Ok(())
@@ -214,6 +217,9 @@ enum Command {
         #[arg(long, default_value = "3030")]
         port: u16,
     },
+
+    /// Export the GraphQL SDL for the server
+    ShowGraphqlSchema,
 }
 
 #[tokio::main]

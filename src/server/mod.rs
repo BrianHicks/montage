@@ -5,7 +5,7 @@ mod query;
 mod session;
 
 use async_graphql::http::graphiql_source;
-use async_graphql::{EmptySubscription, Schema};
+use async_graphql::{EmptySubscription, Schema, SchemaBuilder};
 use color_eyre::eyre::Result;
 use mutation::Mutation;
 use query::Query;
@@ -15,8 +15,12 @@ use warp::Filter;
 
 type MontageSchema = Schema<Query, Mutation, EmptySubscription>;
 
+pub fn schema() -> SchemaBuilder<Query, Mutation, EmptySubscription> {
+    Schema::build(Query, Mutation, EmptySubscription)
+}
+
 pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Result<()> {
-    let schema = Schema::build(Query, Mutation, EmptySubscription)
+    let schema = schema()
         .extension(async_graphql::extensions::Tracing)
         .data(pool)
         .finish();
