@@ -19,15 +19,6 @@ pub fn value_parser(s: &str) -> Result<Scripts> {
 }
 
 impl Scripts {
-    pub fn on_break(&self) -> Result<()> {
-        let to_run = self.join("on-break");
-        if to_run.exists() {
-            Scripts::run("on-break", Command::new(to_run))?;
-        }
-
-        Ok(())
-    }
-
     pub fn on_stop(&self) -> Result<()> {
         let to_run = self.join("on-stop");
         if to_run.exists() {
