@@ -126,7 +126,12 @@ impl Opts {
                 server::serve(self.open_sqlite_database().await?, *addr, *port).await?
             }
             Command::ShowGraphqlSchema => {
-                println!("{}", server::schema().finish().sdl())
+                println!(
+                    "{}",
+                    server::schema(self.open_sqlite_database().await?)
+                        .await?
+                        .sdl()
+                )
             }
         }
 

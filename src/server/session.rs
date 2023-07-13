@@ -6,7 +6,7 @@ use indoc::indoc;
 use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
 
 /// A session, either currently-running or historical
-#[derive(SimpleObject, Debug, PartialEq, Eq)]
+#[derive(SimpleObject, Debug, PartialEq, Eq, Clone)]
 #[graphql(complex)]
 pub struct Session {
     #[graphql(skip)]

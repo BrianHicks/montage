@@ -1410,6 +1410,7 @@ dependencies = [
  "color-eyre",
  "crossbeam-channel",
  "directories",
+ "futures-core",
  "indoc",
  "iso8601",
  "notify",
@@ -1420,6 +1421,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
+ "tokio-stream",
  "tracing",
  "tracing-subscriber",
  "warp",
@@ -2604,6 +2606,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]
