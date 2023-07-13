@@ -11,6 +11,6 @@ impl Query {
     }
 
     async fn current_session(&self, context: &Context<'_>) -> Result<Option<Session>> {
-        Session::current_session(context.data().map_err(Error::ContextError)?).await
+        Session::current_session(context.data().map_err(Error::Context)?).await
     }
 }

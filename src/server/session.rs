@@ -101,7 +101,7 @@ impl Session {
                 .bind(start_time)
                 .execute(pool)
                 .await
-                .map_err(Error::QueryError)?;
+                .map_err(Error::Query)?;
 
         tracing::info!(
             count = closed_existing_sessions_receipt.rows_affected(),
@@ -119,7 +119,7 @@ impl Session {
         .bind(duration.to_string())
         .fetch_one(pool)
         .await
-        .map_err(Error::QueryError)?;
+        .map_err(Error::Query)?;
 
         tracing::info!(
             description = res.description,
@@ -154,7 +154,7 @@ impl Session {
             .bind(current.id)
             .execute(pool)
             .await
-            .map_err(Error::QueryError)?;
+            .map_err(Error::Query)?;
 
         debug_assert!(receipt.rows_affected() == 1);
 
@@ -172,7 +172,7 @@ impl Session {
         "})
         .fetch_optional(pool)
         .await
-        .map_err(Error::QueryError)
+        .map_err(Error::Query)
     }
 }
 
