@@ -5,8 +5,10 @@ mod state;
 mod tokio_spawner;
 
 use crate::tokio_spawner::TokioSpawner;
-use async_tungstenite::tungstenite::{http::HeaderValue, handshake::client::Request, client::IntoClientRequest};
-use chrono::{Duration, Local};
+use async_tungstenite::tungstenite::{
+    client::IntoClientRequest, handshake::client::Request, http::HeaderValue,
+};
+use chrono::{DateTime, Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
@@ -48,7 +50,6 @@ impl Opts {
                 duration,
                 client_info,
             } => {
-                // TODO: refactor this and break into a single method
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
@@ -56,26 +57,18 @@ impl Opts {
                         duration: *duration,
                     });
 
-                let resp = client_info.make_graphql_request(query).await?;
-
-                let session = resp.data.expect("a non-null session").start;
-
-                let now = Local::now();
-
-                let formatted_end_time =
-                    if now.date_naive() == session.projected_end_time.date_naive() {
-                        session.projected_end_time.format("%I:%M %P")
-                    } else {
-                        session.projected_end_time.format("%Y-%m-%d %I:%M %P")
-                    };
+                let session = client_info
+                    .make_graphql_request(query)
+                    .await?
+                    .data
+                    .expect("a non-null session")
+                    .start;
 
                 println!(
                     "Started \"{}\", running for {} minutes until {}",
                     session.description,
-                    Duration::from_std(std::time::Duration::from(session.duration))
-                        .wrap_err("could not parse duration")?
-                        .num_minutes(),
-                    formatted_end_time,
+                    Self::humanize_duration_minutes(session.duration)?,
+                    Self::humanize_time_12hr(session.projected_end_time),
                 )
             }
             Command::Break {
@@ -83,7 +76,6 @@ impl Opts {
                 duration,
                 client_info,
             } => {
-                // TODO: refactor this and start into a single method
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
@@ -91,25 +83,17 @@ impl Opts {
                         duration: *duration,
                     });
 
-                let resp = client_info.make_graphql_request(query).await?;
-
-                let session = resp.data.expect("a non-null session").start;
-
-                let now = Local::now();
-
-                let formatted_end_time =
-                    if now.date_naive() == session.projected_end_time.date_naive() {
-                        session.projected_end_time.format("%I:%M %P")
-                    } else {
-                        session.projected_end_time.format("%Y-%m-%d %I:%M %P")
-                    };
+                let session = client_info
+                    .make_graphql_request(query)
+                    .await?
+                    .data
+                    .expect("a non-null session")
+                    .start;
 
                 println!(
                     "Started break, running for {} minutes until {}",
-                    Duration::from_std(std::time::Duration::from(session.duration))
-                        .wrap_err("could not parse duration")?
-                        .num_minutes(),
-                    formatted_end_time,
+                    Self::humanize_duration_minutes(session.duration)?,
+                    Self::humanize_time_12hr(session.projected_end_time),
                 )
             }
             Command::Watch(client_info) => {
@@ -212,6 +196,20 @@ impl Opts {
         }
 
         Ok(())
+    }
+
+    fn humanize_time_12hr(time: DateTime<Local>) -> String {
+        if Local::now().date_naive() == time.date_naive() {
+            time.format("%I:%M %P").to_string()
+        } else {
+            time.format("%Y-%m-%d %I:%M %P").to_string()
+        }
+    }
+
+    fn humanize_duration_minutes(duration: iso8601::Duration) -> Result<i64> {
+        Ok(Duration::from_std(std::time::Duration::from(duration))
+            .wrap_err("could not parse duration")?
+            .num_minutes())
     }
 
     fn humanize_duration(duration: chrono::Duration) -> String {
