@@ -78,17 +78,40 @@ impl Opts {
                     formatted_end_time,
                 )
             }
-            Command::Break { duration } => {
-                store.start_break(Local::now() + Duration::minutes(TryInto::try_into(*duration)?));
-                store
-                    .write()
-                    .wrap_err("could not write state after starting break")?;
+            Command::Break { description, duration, client_info } => {
+                let client = reqwest::Client::new();
 
-                if let Some(scripts) = &self.scripts {
-                    scripts
-                        .on_break()
-                        .wrap_err("failed to run start script after starting")?;
-                }
+                let query =
+                    client::start::StartMutation::build(client::start::StartMutationVariables {
+                        description,
+                        kind: client::start::Kind::Break,
+                        duration: *duration,
+                    });
+
+                let resp = client
+                    .post(client_info.endpoint())
+                    .run_graphql(query)
+                    .await
+                    .wrap_err("GraphQL request failed")?;
+
+                let session = resp.data.expect("a non-null session").start;
+
+                let now = Local::now();
+
+                let formatted_end_time =
+                    if now.date_naive() == session.projected_end_time.date_naive() {
+                        session.projected_end_time.format("%I:%M %P")
+                    } else {
+                        session.projected_end_time.format("%Y-%m-%d %I:%M %P")
+                    };
+
+                println!(
+                    "Started break, running for {} minutes until {}",
+                    Duration::from_std(std::time::Duration::from(session.duration))
+                        .wrap_err("could not parse duration")?
+                        .num_minutes(),
+                    formatted_end_time,
+                )
             }
             Command::Stop => {
                 store.stop();
@@ -258,9 +281,15 @@ enum Command {
 
     /// Take a break in between tasks
     Break {
-        /// How long you're going to rest, in minutes
-        #[arg(long, default_value = "5")]
-        duration: usize,
+        #[arg(long, default_value = "Break")]
+        description: String,
+
+        /// How long you're going to rest, in ISO8601 duration format
+        #[arg(long)]
+        duration: Option<iso8601::Duration>,
+
+        #[command(flatten)]
+        client_info: GraphQLClientInfo,
     },
 
     /// Stop permanently (like, for the day or for an extended break)
