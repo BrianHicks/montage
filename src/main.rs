@@ -6,6 +6,8 @@ mod state;
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
+use cynic::http::ReqwestExt;
+use cynic::QueryBuilder;
 use rand::seq::SliceRandom;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
@@ -74,17 +76,18 @@ impl Opts {
                         .wrap_err("failed to run start script after starting")?;
                 }
             }
-            Command::Xbar => {
-                let now = Local::now();
-                match store.state {
-                    state::State::NothingIsHappening {} => println!("no task"),
-                    state::State::Running { task, until } => {
-                        println!("{} ({})", task, Self::humanize_duration(until - now))
-                    }
-                    state::State::OnBreak { until } => {
-                        println!("on break ({})", Self::humanize_duration(until - now))
-                    }
-                }
+            Command::Xbar(client_info) => {
+                let client = reqwest::Client::new();
+
+                let query = client::current_session::CurrentSessionQuery::build(());
+
+                let resp = client
+                    .post(client_info.endpoint())
+                    .run_graphql(query)
+                    .await
+                    .wrap_err("could not make GraphQL request")?;
+
+                println!("{resp:#?}");
             }
             Command::Vex => {
                 let store_events = store.watch().wrap_err("could not watch store")?;
@@ -191,6 +194,23 @@ static DEFAULT_ADDR: &str = "127.0.0.1";
 /// here from a system service since it's reserved!
 static DEFAULT_PORT: &str = "4774";
 
+#[derive(Parser, Debug)]
+struct GraphQLClientInfo {
+    /// The address to bind to
+    #[arg(long, default_value = DEFAULT_ADDR, env = "MONTAGE_ADDR")]
+    server_addr: std::net::IpAddr,
+
+    /// The port to bind to
+    #[arg(long, default_value = DEFAULT_PORT, env = "MONTAGE_PORT")]
+    server_port: u16,
+}
+
+impl GraphQLClientInfo {
+    fn endpoint(&self) -> String {
+        format!("http://{}:{}/graphql", self.server_addr, self.server_port)
+    }
+}
+
 #[derive(clap::Subcommand, Debug)]
 enum Command {
     /// Start a task
@@ -214,7 +234,7 @@ enum Command {
     Stop,
 
     /// Show an xbar status message
-    Xbar,
+    Xbar(GraphQLClientInfo),
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
