@@ -5,12 +5,15 @@ mod state;
 mod tokio_spawner;
 
 use crate::tokio_spawner::TokioSpawner;
+use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use cynic::http::CynicReqwestError;
 use cynic::http::ReqwestExt;
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
+use futures::StreamExt;
+use graphql_ws_client::CynicClientBuilder;
 use rand::seq::SliceRandom;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
@@ -123,12 +126,6 @@ impl Opts {
             }
             Command::Watch(client_info) => {
                 let query = client::current_session_updates::CurrentSessionUpdates::build(());
-
-                use async_tungstenite::tungstenite::{
-                    client::IntoClientRequest, http::HeaderValue,
-                };
-                use futures::StreamExt;
-                use graphql_ws_client::CynicClientBuilder;
 
                 let mut request = "ws://localhost:4774".into_client_request().unwrap();
                 request.headers_mut().insert(

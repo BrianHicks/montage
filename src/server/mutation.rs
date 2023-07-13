@@ -62,8 +62,7 @@ impl Mutation {
         context: &Context<'_>,
         #[graphql(desc = "How much time to add?")] duration: chrono::Duration,
     ) -> Result<Session> {
-        let session =
-            Session::extend_by(context.data().map_err(Error::Context)?, duration).await?;
+        let session = Session::extend_by(context.data().map_err(Error::Context)?, duration).await?;
 
         self.notify_subscribers(&session)?;
         Ok(session)
@@ -75,8 +74,7 @@ impl Mutation {
         context: &Context<'_>,
         #[graphql(desc = "When to extend to?")] target: chrono::DateTime<chrono::Local>,
     ) -> Result<Session> {
-        let session =
-            Session::extend_to(context.data().map_err(Error::Context)?, target).await?;
+        let session = Session::extend_to(context.data().map_err(Error::Context)?, target).await?;
 
         self.notify_subscribers(&session)?;
         Ok(session)

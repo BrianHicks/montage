@@ -88,7 +88,7 @@ impl Session {
             Some(projected_end_time - now)
         }
     }
-    
+
     pub async fn start(
         pool: &Pool<Sqlite>,
         kind: Kind,
