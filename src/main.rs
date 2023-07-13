@@ -137,8 +137,6 @@ impl Opts {
                     .await
                     .unwrap();
 
-                println!("Connected");
-
                 let (sink, stream) = connection.split();
 
                 let mut client = CynicClientBuilder::new()
@@ -147,7 +145,6 @@ impl Opts {
                     .unwrap();
 
                 let mut stream = client.streaming_operation(query).await.unwrap();
-                println!("Running subscription apparently?");
                 while let Some(item) = stream.next().await {
                     println!("{:?}", item);
                 }
