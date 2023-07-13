@@ -1,0 +1,105 @@
+# NOTE: dont change this by hand! Instead, run `scripts/update-graphql-schema.sh` to get updates
+
+"""
+Implement the DateTime<Local> scalar
+
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime
+
+"""
+Implement the Duration scalar
+
+The input/output is a string in ISO8601 format.
+"""
+scalar Duration
+
+
+
+
+"""
+What kind of session are we going to have?
+"""
+enum Kind {
+	"""
+	A longer session focused on doing something
+	"""
+	TASK
+	"""
+	A shorter recovery session
+	"""
+	BREAK
+	"""
+	A longer recovery session like lunch, overnight, or the weekend
+	"""
+	NOT_WORKING
+}
+
+type Mutation {
+	"""
+	Start a new session
+	"""
+	start(kind: Kind!, description: String!, duration: Duration, startTime: DateTime): Session!
+	"""
+	Extend the current session by a set amount of time
+	"""
+	extendBy(duration: Duration!): Session!
+	"""
+	Set the duration of the current session so it will be projected to end at the exact moment you specify
+	"""
+	extendTo(target: DateTime!): Session!
+}
+
+type Query {
+	version: String!
+	currentSession: Session
+}
+
+"""
+A session, either currently-running or historical
+"""
+type Session {
+	"""
+	What kind of session is this?
+	"""
+	kind: Kind!
+	"""
+	What's going on in this session?
+	"""
+	description: String!
+	"""
+	When did this session start?
+	"""
+	startTime: DateTime!
+	"""
+	How much time have we committed to this session?
+	"""
+	duration: Duration!
+	"""
+	If the session is over, when did it end?
+	"""
+	endTime: DateTime
+	"""
+	When is/was the session projected to end?
+	"""
+	projectedEndTime: DateTime!
+	"""
+	If the session is in progress, how much time is left?
+	"""
+	remainingTime: Duration
+}
+
+
+type Subscription {
+	"""
+	Get the current session and any future sessions while the connection is open.
+	"""
+	currentSession: Session
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}
+
