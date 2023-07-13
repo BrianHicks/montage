@@ -1,7 +1,5 @@
 mod client;
-mod scripts;
 mod server;
-mod state;
 mod tokio_spawner;
 
 use crate::tokio_spawner::TokioSpawner;
@@ -30,9 +28,6 @@ struct Opts {
     #[command(subcommand)]
     command: Command,
 
-    #[arg(long, env = "MONTAGE_SCRIPTS", global = true, value_parser = scripts::value_parser)]
-    scripts: Option<scripts::Scripts>,
-
     #[arg(long, env = "MONTAGE_LOG_LEVEL", global = true, default_value = "INFO")]
     log_level: tracing::Level,
 
@@ -42,8 +37,6 @@ struct Opts {
 
 impl Opts {
     async fn run(&self) -> Result<()> {
-        let mut store = state::Store::create_or_load()?;
-
         match &self.command {
             Command::Start {
                 description,
@@ -134,41 +127,9 @@ impl Opts {
                 };
             }
             Command::Vex => {
-                let store_events = store.watch().wrap_err("could not watch store")?;
-                let tick_events = crossbeam_channel::tick(std::time::Duration::from_secs(2));
                 let mut rng = rand::thread_rng();
-
-                loop {
-                    crossbeam_channel::select! {
-                        recv(store_events) -> msg_res => match msg_res {
-                            Ok(()) => {
-                                store.reload().wrap_err("could not reload store")?;
-                            },
-                            Err(err) => tracing::error!(err=?err, "error receiving store events"),
-                        },
-                        recv(tick_events) -> _msg => {
-                            let now = Local::now();
-
-                            let beep_after = match store.state {
-                                state::State::NothingIsHappening {} => now,
-                                state::State::Running { until, .. } => until,
-                                state::State::OnBreak { until } => until,
-                            };
-
-                            if now >= beep_after {
-                                let what_to_say = THINGS_TO_SAY.choose(&mut rng).unwrap();
-                                std::process::Command::new("say").arg(what_to_say).spawn()?;
-                            }
-
-                            let current = match &store.state {
-                                state::State::NothingIsHappening {} => "nothing",
-                                state::State::OnBreak {..} => "break",
-                                state::State::Running { task, .. } => task,
-                            };
-                            tracing::info!(current=current, "{}", Self::humanize_duration(beep_after - now));
-                        },
-                    }
-                }
+                let what_to_say = THINGS_TO_SAY.choose(&mut rng).unwrap();
+                todo!("HEY {what_to_say}");
             }
             Command::Serve { addr, port } => {
                 server::serve(self.open_sqlite_database().await?, *addr, *port).await?
@@ -198,14 +159,6 @@ impl Opts {
         Ok(Duration::from_std(std::time::Duration::from(duration))
             .wrap_err("could not parse duration")?
             .num_minutes())
-    }
-
-    fn humanize_duration(duration: chrono::Duration) -> String {
-        match duration.num_minutes() {
-            0 => format!("{} seconds", duration.num_seconds()),
-            1 => format!("1 minute, {} seconds", duration.num_seconds() - 60),
-            more => format!("{} minutes", more + 1),
-        }
     }
 
     async fn open_sqlite_database(&self) -> Result<Pool<Sqlite>> {
