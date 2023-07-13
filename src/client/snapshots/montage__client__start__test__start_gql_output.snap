@@ -5,6 +5,7 @@ expression: operation.query
 mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) {
   start(description: $description, kind: $kind, duration: $duration) {
     projectedEndTime
+    duration
     description
   }
 }

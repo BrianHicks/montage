@@ -18,6 +18,7 @@ pub struct StartMutation {
 #[derive(cynic::QueryFragment, Debug)]
 pub struct Session {
     pub projected_end_time: DateTime,
+    pub duration: Duration,
     pub description: String,
 }
 
