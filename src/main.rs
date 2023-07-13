@@ -6,6 +6,7 @@ mod state;
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
+use cynic::http::CynicReqwestError;
 use cynic::http::ReqwestExt;
 use cynic::QueryBuilder;
 use rand::seq::SliceRandom;
@@ -81,13 +82,17 @@ impl Opts {
 
                 let query = client::current_session::CurrentSessionQuery::build(());
 
-                let resp = client
-                    .post(client_info.endpoint())
-                    .run_graphql(query)
-                    .await
-                    .wrap_err("could not make GraphQL request")?;
+                match client.post(client_info.endpoint()).run_graphql(query).await {
+                    Err(CynicReqwestError::ReqwestError(err)) if err.is_connect() => {
+                        // a message for the xbar status line
+                        eprintln!("⚠️ failed to connect to server");
 
-                println!("{resp:#?}");
+                        // a message to expand on
+                        return Err(err).wrap_err("GraphQL request failed")
+                    }
+                    Err(err) => return Err(err).wrap_err("GraphQL request failed"),
+                    Ok(resp) => println!("{resp:#?}"),
+                };
             }
             Command::Vex => {
                 let store_events = store.watch().wrap_err("could not watch store")?;
