@@ -22,6 +22,7 @@
               pkgs.rust-analyzer
               pkgs.sqlx-cli
               pkgs.cargo-insta
+              pkgs.cargo-machete
 
               # for the OmniFocus scripts
               pkgs.nodePackages.npm
