@@ -16,7 +16,8 @@ impl Subscription {
 
 #[Subscription]
 impl Subscription {
-    async fn sessions(&self) -> impl Stream<Item = Option<Session>> {
+    /// Get the current session and any future sessions while the connection is open.
+    async fn current_session(&self) -> impl Stream<Item = Option<Session>> {
         WatchStream::new(self.receiver.clone())
     }
 }
