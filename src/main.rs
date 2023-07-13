@@ -2,13 +2,15 @@ mod client;
 mod scripts;
 mod server;
 mod state;
+mod tokio_spawner;
 
+use crate::tokio_spawner::TokioSpawner;
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use cynic::http::CynicReqwestError;
 use cynic::http::ReqwestExt;
-use cynic::{MutationBuilder, QueryBuilder};
+use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use rand::seq::SliceRandom;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
@@ -118,6 +120,40 @@ impl Opts {
                         .num_minutes(),
                     formatted_end_time,
                 )
+            }
+            Command::Watch(client_info) => {
+                let query = client::current_session_updates::CurrentSessionUpdates::build(());
+
+                use async_tungstenite::tungstenite::{
+                    client::IntoClientRequest, http::HeaderValue,
+                };
+                use futures::StreamExt;
+                use graphql_ws_client::CynicClientBuilder;
+
+                let mut request = "ws://localhost:4774".into_client_request().unwrap();
+                request.headers_mut().insert(
+                    "Sec-WebSocket-Protocol",
+                    HeaderValue::from_str("graphql-transport-ws").unwrap(),
+                );
+
+                let (connection, _) = async_tungstenite::tokio::connect_async(request)
+                    .await
+                    .unwrap();
+
+                println!("Connected");
+
+                let (sink, stream) = connection.split();
+
+                let mut client = CynicClientBuilder::new()
+                    .build(stream, sink, TokioSpawner::current())
+                    .await
+                    .unwrap();
+
+                let mut stream = client.streaming_operation(query).await.unwrap();
+                println!("Running subscription apparently?");
+                while let Some(item) = stream.next().await {
+                    println!("{:?}", item);
+                }
             }
             Command::Stop => {
                 store.stop();
@@ -297,6 +333,8 @@ enum Command {
         #[command(flatten)]
         client_info: GraphQLClientInfo,
     },
+
+    Watch(GraphQLClientInfo),
 
     /// Stop permanently (like, for the day or for an extended break)
     Stop,

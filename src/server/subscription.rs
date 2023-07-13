@@ -1,6 +1,6 @@
 use super::session::Session;
 use async_graphql::Subscription;
-use futures_core::stream::Stream;
+use futures::stream::Stream;
 use tokio::sync::watch::Receiver;
 use tokio_stream::wrappers::WatchStream;
 
