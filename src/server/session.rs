@@ -32,16 +32,12 @@ pub struct Session {
 impl Session {
     /// When is/was the session projected to end?
     async fn projected_end_time(&self) -> DateTime<Local> {
-        self.start_time + self.duration
+        self.get_projected_end_time()
     }
 
     /// If the session is in progress, how much time is left?
     async fn remaining_time(&self) -> Option<Duration> {
-        if self.end_time.is_some() {
-            None
-        } else {
-            Some(self.start_time + self.duration - Local::now())
-        }
+        self.get_remaining_time()
     }
 }
 
@@ -75,6 +71,24 @@ impl FromRow<'_, SqliteRow> for Session {
 }
 
 impl Session {
+    fn get_projected_end_time(&self) -> DateTime<Local> {
+        self.start_time + self.duration
+    }
+
+    // TODO: tests for this!
+    fn get_remaining_time(&self) -> Option<Duration> {
+        let now = Local::now();
+        let projected_end_time = self.get_projected_end_time();
+
+        if self.end_time.is_some() {
+            None
+        } else if projected_end_time < now {
+            Some(Duration::seconds(0))
+        } else {
+            Some(projected_end_time - now)
+        }
+    }
+    
     pub async fn start(
         pool: &Pool<Sqlite>,
         kind: Kind,
