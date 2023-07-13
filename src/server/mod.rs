@@ -43,8 +43,10 @@ pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Res
 
     let subscriptions = async_graphql_warp::graphql_subscription(schema);
 
+    let subscriptions_url = format!("ws://{}:{}/", &addr, &port);
+
     let graphiql = warp::path("graphiql")
-        .map(|| warp::reply::html(graphiql_source("graphql", Some("subscriptions"))));
+        .map(move || warp::reply::html(graphiql_source("graphql", Some(&subscriptions_url))));
 
     warp::serve(graphql.or(graphiql).or(subscriptions))
         .run((addr, port))
