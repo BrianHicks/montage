@@ -43,6 +43,7 @@ impl Opts {
                 duration,
                 client_info,
             } => {
+                // TODO: refactor this and break into a single method
                 let client = reqwest::Client::new();
 
                 let query =
@@ -78,7 +79,12 @@ impl Opts {
                     formatted_end_time,
                 )
             }
-            Command::Break { description, duration, client_info } => {
+            Command::Break {
+                description,
+                duration,
+                client_info,
+            } => {
+                // TODO: refactor this and start into a single method
                 let client = reqwest::Client::new();
 
                 let query =
