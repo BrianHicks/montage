@@ -127,15 +127,10 @@ impl Opts {
             Command::Watch(client_info) => {
                 let query = client::current_session_updates::CurrentSessionUpdates::build(());
 
-                let mut request = "ws://localhost:4774".into_client_request().unwrap();
-                request.headers_mut().insert(
-                    "Sec-WebSocket-Protocol",
-                    HeaderValue::from_str("graphql-transport-ws").unwrap(),
-                );
-
-                let (connection, _) = async_tungstenite::tokio::connect_async(request)
-                    .await
-                    .unwrap();
+                let (connection, _) =
+                    async_tungstenite::tokio::connect_async(client_info.request()?)
+                        .await
+                        .unwrap();
 
                 let (sink, stream) = connection.split();
 
@@ -297,6 +292,19 @@ struct GraphQLClientInfo {
 impl GraphQLClientInfo {
     fn endpoint(&self) -> String {
         format!("http://{}:{}/graphql", self.server_addr, self.server_port)
+    }
+
+    fn request(&self) -> Result<Request> {
+        let mut request = format!("ws://{}:{}", self.server_addr, self.server_port)
+            .into_client_request()
+            .wrap_err("could not make a request with addresses provided")?;
+
+        request.headers_mut().insert(
+            "Sec-WebSocket-Protocol",
+            HeaderValue::from_str("graphql-transport-ws").unwrap(),
+        );
+
+        Ok(request)
     }
 }
 
