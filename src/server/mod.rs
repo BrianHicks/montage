@@ -34,17 +34,21 @@ pub async fn schema(pool: Pool<Sqlite>) -> Result<MontageSchema> {
 pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Result<()> {
     let schema = schema(pool).await?;
 
-    let graphql = async_graphql_warp::graphql(schema).and_then(
+    let graphql = async_graphql_warp::graphql(schema.clone()).and_then(
         |(schema, request): (MontageSchema, async_graphql::Request)| async move {
             let resp = schema.execute(request).await;
             Ok::<_, Infallible>(async_graphql_warp::GraphQLResponse::from(resp))
         },
     );
 
-    let graphiql =
-        warp::path("graphiql").map(|| warp::reply::html(graphiql_source("graphql", None)));
+    let subscriptions = async_graphql_warp::graphql_subscription(schema);
 
-    warp::serve(graphql.or(graphiql)).run((addr, port)).await;
+    let graphiql = warp::path("graphiql")
+        .map(|| warp::reply::html(graphiql_source("graphql", Some("subscriptions"))));
+
+    warp::serve(graphql.or(graphiql).or(subscriptions))
+        .run((addr, port))
+        .await;
 
     Ok(())
 }
