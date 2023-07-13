@@ -5,16 +5,16 @@ mod state;
 mod tokio_spawner;
 
 use crate::tokio_spawner::TokioSpawner;
-use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
+use async_tungstenite::tungstenite::{http::HeaderValue, handshake::client::Request, client::IntoClientRequest};
 use chrono::{Duration, Local};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
-use cynic::http::CynicReqwestError;
-use cynic::http::ReqwestExt;
-use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
+use cynic::http::{CynicReqwestError, ReqwestExt};
+use cynic::{GraphQlResponse, MutationBuilder, Operation, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
 use rand::seq::SliceRandom;
+use serde::{de::DeserializeOwned, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
 use std::path::PathBuf;
@@ -49,8 +49,6 @@ impl Opts {
                 client_info,
             } => {
                 // TODO: refactor this and break into a single method
-                let client = reqwest::Client::new();
-
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
@@ -58,11 +56,7 @@ impl Opts {
                         duration: *duration,
                     });
 
-                let resp = client
-                    .post(client_info.endpoint())
-                    .run_graphql(query)
-                    .await
-                    .wrap_err("GraphQL request failed")?;
+                let resp = client_info.make_graphql_request(query).await?;
 
                 let session = resp.data.expect("a non-null session").start;
 
@@ -90,8 +84,6 @@ impl Opts {
                 client_info,
             } => {
                 // TODO: refactor this and start into a single method
-                let client = reqwest::Client::new();
-
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
@@ -99,11 +91,7 @@ impl Opts {
                         duration: *duration,
                     });
 
-                let resp = client
-                    .post(client_info.endpoint())
-                    .run_graphql(query)
-                    .await
-                    .wrap_err("GraphQL request failed")?;
+                let resp = client_info.make_graphql_request(query).await?;
 
                 let session = resp.data.expect("a non-null session").start;
 
@@ -292,6 +280,23 @@ struct GraphQLClientInfo {
 impl GraphQLClientInfo {
     fn endpoint(&self) -> String {
         format!("http://{}:{}/graphql", self.server_addr, self.server_port)
+    }
+
+    async fn make_graphql_request<ResponseData, Vars>(
+        &self,
+        query: Operation<ResponseData, Vars>,
+    ) -> Result<GraphQlResponse<ResponseData>>
+    where
+        Vars: Serialize,
+        ResponseData: DeserializeOwned + 'static,
+    {
+        let client = reqwest::Client::new();
+
+        client
+            .post(self.endpoint())
+            .run_graphql(query)
+            .await
+            .wrap_err("GraphQL request failed")
     }
 
     fn request(&self) -> Result<Request> {
