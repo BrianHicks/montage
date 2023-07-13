@@ -21,6 +21,7 @@
               pkgs.libiconv
               pkgs.rust-analyzer
               pkgs.sqlx-cli
+              pkgs.cargo-insta
 
               # for the OmniFocus scripts
               pkgs.nodePackages.npm

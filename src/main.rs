@@ -1,3 +1,4 @@
+mod client;
 mod scripts;
 mod server;
 mod state;

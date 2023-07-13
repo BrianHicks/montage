@@ -1,0 +1,17 @@
+---
+source: src/client/current_session.rs
+expression: operation.query
+---
+query CurrentSessionQuery {
+  currentSession {
+    description
+    duration
+    endTime
+    kind
+    projectedEndTime
+    remainingTime
+    startTime
+  }
+}
+
+
