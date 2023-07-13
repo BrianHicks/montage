@@ -116,18 +116,6 @@ impl Opts {
                     println!("{:?}", item);
                 }
             }
-            Command::Stop => {
-                store.stop();
-                store
-                    .write()
-                    .wrap_err("could not write state after starting break")?;
-
-                if let Some(scripts) = &self.scripts {
-                    scripts
-                        .on_stop()
-                        .wrap_err("failed to run start script after starting")?;
-                }
-            }
             Command::Xbar(client_info) => {
                 let client = reqwest::Client::new();
 
@@ -340,9 +328,6 @@ enum Command {
     },
 
     Watch(GraphQLClientInfo),
-
-    /// Stop permanently (like, for the day or for an extended break)
-    Stop,
 
     /// Show an xbar status message
     Xbar(GraphQLClientInfo),
