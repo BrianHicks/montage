@@ -1,4 +1,4 @@
-# NOTE: dont change this by hand! Instead, run `scripts/update-graphql-schema.sh` to get updates
+# NOTE: dont change this by hand! Instead, run `./scripts/update-graphql-schema.sh` to get updates
 
 """
 Implement the DateTime<Local> scalar
@@ -29,10 +29,6 @@ enum Kind {
 	A shorter recovery session
 	"""
 	BREAK
-	"""
-	A longer recovery session like lunch, overnight, or the weekend
-	"""
-	NOT_WORKING
 }
 
 type Mutation {
@@ -102,4 +98,3 @@ schema {
 	mutation: Mutation
 	subscription: Subscription
 }
-

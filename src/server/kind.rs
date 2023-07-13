@@ -9,9 +9,6 @@ pub enum Kind {
 
     /// A shorter recovery session
     Break,
-
-    /// A longer recovery session like lunch, overnight, or the weekend
-    NotWorking,
 }
 
 impl Kind {
@@ -19,7 +16,6 @@ impl Kind {
         match self {
             Self::Task => Duration::minutes(25),
             Self::Break => Duration::minutes(5),
-            Self::NotWorking => Duration::minutes(60),
         }
     }
 }
