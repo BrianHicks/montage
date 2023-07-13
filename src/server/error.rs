@@ -1,3 +1,5 @@
+use super::session::Session;
+
 pub type Result<Whatever> = std::result::Result<Whatever, Error>;
 
 #[derive(Debug, thiserror::Error)]
@@ -10,4 +12,7 @@ pub enum Error {
 
     #[error("there is no current session")]
     NoCurrentSession,
+
+    #[error("error sending new session: {0}")]
+    SendError(tokio::sync::watch::error::SendError<Option<Session>>),
 }

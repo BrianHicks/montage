@@ -3,9 +3,24 @@ use super::kind::Kind;
 use super::session::Session;
 use async_graphql::context::Context;
 use async_graphql::Object;
+use tokio::sync::watch::Sender;
 
 #[derive(Debug)]
-pub struct Mutation;
+pub struct Mutation {
+    sender: Sender<Option<Session>>,
+}
+
+impl Mutation {
+    pub fn new(sender: Sender<Option<Session>>) -> Self {
+        Self { sender }
+    }
+
+    fn notify_subscribers(&self, session: &Session) -> Result<()> {
+        self.sender
+            .send(Some(session.clone()))
+            .map_err(Error::SendError)
+    }
+}
 
 #[Object]
 impl Mutation {
@@ -27,14 +42,18 @@ impl Mutation {
 
         let final_duration = duration.unwrap_or_else(|| kind.default_session_length());
 
-        Session::start(
+        let session = Session::start(
             context.data().map_err(Error::ContextError)?,
             kind,
             &description,
             final_start,
             final_duration,
         )
-        .await
+        .await?;
+
+        self.notify_subscribers(&session)?;
+
+        Ok(session)
     }
 
     /// Extend the current session by a set amount of time
@@ -43,7 +62,11 @@ impl Mutation {
         context: &Context<'_>,
         #[graphql(desc = "How much time to add?")] duration: chrono::Duration,
     ) -> Result<Session> {
-        Session::extend_by(context.data().map_err(Error::ContextError)?, duration).await
+        let session =
+            Session::extend_by(context.data().map_err(Error::ContextError)?, duration).await?;
+
+        self.notify_subscribers(&session)?;
+        Ok(session)
     }
 
     /// Set the duration of the current session so it will be projected to end at the exact moment you specify
@@ -52,6 +75,10 @@ impl Mutation {
         context: &Context<'_>,
         #[graphql(desc = "When to extend to?")] target: chrono::DateTime<chrono::Local>,
     ) -> Result<Session> {
-        Session::extend_to(context.data().map_err(Error::ContextError)?, target).await
+        let session =
+            Session::extend_to(context.data().map_err(Error::ContextError)?, target).await?;
+
+        self.notify_subscribers(&session)?;
+        Ok(session)
     }
 }

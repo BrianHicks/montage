@@ -21,12 +21,14 @@ type MontageSchema = Schema<Query, Mutation, Subscription>;
 pub async fn schema(pool: Pool<Sqlite>) -> Result<MontageSchema> {
     let initial = Session::current_session(&pool).await?;
 
-    let (_sender, receiver) = tokio::sync::watch::channel(initial);
+    let (sender, receiver) = tokio::sync::watch::channel(initial);
 
-    Ok(Schema::build(Query, Mutation, Subscription::new(receiver))
-        .extension(async_graphql::extensions::Tracing)
-        .data(pool)
-        .finish())
+    Ok(
+        Schema::build(Query, Mutation::new(sender), Subscription::new(receiver))
+            .extension(async_graphql::extensions::Tracing)
+            .data(pool)
+            .finish(),
+    )
 }
 
 pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Result<()> {
