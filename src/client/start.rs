@@ -40,7 +40,7 @@ mod test {
     use cynic::MutationBuilder;
 
     #[test]
-    fn start_gql_output() {
+    fn gql_output() {
         let operation = StartMutation::build(StartMutationVariables {
             description: "test description",
             kind: Kind::Task,

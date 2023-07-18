@@ -31,7 +31,7 @@ mod test {
     use cynic::MutationBuilder;
 
     #[test]
-    fn start_gql_output() {
+    fn gql_output() {
         let operation = ExtendByMutation::build(ExtendByMutationVariables {
             duration: iso8601::duration("PT25M").unwrap(),
         });

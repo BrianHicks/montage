@@ -31,7 +31,7 @@ mod test {
     use cynic::MutationBuilder;
 
     #[test]
-    fn start_gql_output() {
+    fn gql_output() {
         let operation = ExtendToMutation::build(ExtendToMutationVariables {
             target: chrono::Local::now(),
         });
