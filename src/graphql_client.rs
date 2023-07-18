@@ -47,8 +47,12 @@ impl GraphQLClient {
             .wrap_err("GraphQL request failed")
     }
 
+    pub fn ws_endpoint(&self) -> String {
+        format!("ws://{}:{}", self.server_addr, self.server_port)
+    }
+
     pub fn request(&self) -> Result<Request> {
-        let mut request = format!("ws://{}:{}", self.server_addr, self.server_port)
+        let mut request = self.ws_endpoint()
             .into_client_request()
             .wrap_err("could not make a request with addresses provided")?;
 

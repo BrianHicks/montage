@@ -2,6 +2,7 @@ mod client;
 mod graphql_client;
 mod server;
 mod tokio_spawner;
+mod vexer;
 
 use crate::graphql_client::GraphQLClient;
 use crate::tokio_spawner::TokioSpawner;
@@ -13,14 +14,10 @@ use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
-use rand::seq::SliceRandom;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
 use std::path::PathBuf;
 use std::str::FromStr;
-use tokio::select;
-
-static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -190,45 +187,7 @@ impl Opts {
                     }
                 };
             }
-            Command::Vex(client) => {
-                let mut session = None;
-                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(2));
-
-                let mut rng = rand::thread_rng();
-                let what_to_say = THINGS_TO_SAY.choose(&mut rng).unwrap();
-                println!("HEY {what_to_say}");
-
-                let query = CurrentSessionUpdates::build(());
-                let (connection, _) = async_tungstenite::tokio::connect_async(client.request()?)
-                    .await
-                    .unwrap();
-
-                let (sink, stream) = connection.split();
-                let mut client = CynicClientBuilder::new()
-                    .build(stream, sink, TokioSpawner::current())
-                    .await
-                    .unwrap();
-
-                let mut sessions_stream = client
-                    .streaming_operation(query)
-                    .await
-                    .wrap_err("could not start streaming")?;
-
-                loop {
-                    select! {
-                        new_session_opt = sessions_stream.next() => {
-                            match new_session_opt {
-                                Some(new_session) =>{
-                                    session = Some(new_session);
-                                    println!("{session:#?}");
-                                },
-                                None => break,
-                            }
-                        },
-                        _ = interval.tick() => println!("tick! {session:?}"),
-                    }
-                }
-            }
+            Command::Vex(vexer) => vexer.run().await?,
             Command::Serve { addr, port } => {
                 server::serve(self.open_sqlite_database().await?, *addr, *port).await?
             }
@@ -343,7 +302,7 @@ enum Command {
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
-    Vex(GraphQLClient),
+    Vex(crate::vexer::Vexer),
 
     /// Start the server, which enables the rest of the features!
     Serve {
