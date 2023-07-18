@@ -123,7 +123,26 @@ impl Opts {
                         return Err(err).wrap_err("GraphQL request failed");
                     }
                     Err(err) => return Err(err).wrap_err("GraphQL request failed"),
-                    Ok(resp) => println!("{resp:#?}"),
+                    Ok(resp) => {
+                        let session = resp
+                            .data
+                            .expect("a non-null session")
+                            .current_session
+                            .expect("a current session");
+
+                        let duration = Duration::from_std(std::time::Duration::from(
+                            session.remaining_time.expect("remaining time"),
+                        ))
+                        .wrap_err("could not parse duration")?;
+                        let minutes = duration.num_minutes();
+
+                        println!(
+                            "⏰ {} ({}:{:02})",
+                            session.description,
+                            minutes,
+                            duration.num_seconds() - minutes * 60,
+                        );
+                    }
                 };
             }
             Command::Vex => {
