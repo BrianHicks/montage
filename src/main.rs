@@ -1,25 +1,24 @@
 mod client;
+mod graphql_client;
 mod server;
 mod tokio_spawner;
 
+use crate::graphql_client::GraphQLClient;
 use crate::tokio_spawner::TokioSpawner;
-use async_tungstenite::tungstenite::{
-    client::IntoClientRequest, handshake::client::Request, http::HeaderValue,
-};
 use chrono::{DateTime, Duration, Local};
 use clap::Parser;
 use client::current_session_updates::CurrentSessionUpdates;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
-use cynic::{GraphQlResponse, MutationBuilder, Operation, QueryBuilder, SubscriptionBuilder};
+use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
 use rand::seq::SliceRandom;
-use serde::{de::DeserializeOwned, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
 use std::path::PathBuf;
 use std::str::FromStr;
+use tokio::select;
 
 static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
@@ -191,10 +190,44 @@ impl Opts {
                     }
                 };
             }
-            Command::Vex => {
+            Command::Vex(client) => {
+                let mut session = None;
+                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(2));
+
                 let mut rng = rand::thread_rng();
                 let what_to_say = THINGS_TO_SAY.choose(&mut rng).unwrap();
-                todo!("HEY {what_to_say}");
+                println!("HEY {what_to_say}");
+
+                let query = CurrentSessionUpdates::build(());
+                let (connection, _) = async_tungstenite::tokio::connect_async(client.request()?)
+                    .await
+                    .unwrap();
+
+                let (sink, stream) = connection.split();
+                let mut client = CynicClientBuilder::new()
+                    .build(stream, sink, TokioSpawner::current())
+                    .await
+                    .unwrap();
+
+                let mut sessions_stream = client
+                    .streaming_operation(query)
+                    .await
+                    .wrap_err("could not start streaming")?;
+
+                loop {
+                    select! {
+                        new_session_opt = sessions_stream.next() => {
+                            match new_session_opt {
+                                Some(new_session) =>{
+                                    session = Some(new_session);
+                                    println!("{session:#?}");
+                                },
+                                None => break,
+                            }
+                        },
+                        _ = interval.tick() => println!("tick! {session:?}"),
+                    }
+                }
             }
             Command::Serve { addr, port } => {
                 server::serve(self.open_sqlite_database().await?, *addr, *port).await?
@@ -263,60 +296,6 @@ impl Opts {
     }
 }
 
-static DEFAULT_ADDR: &str = "127.0.0.1";
-
-/// Squatting on a IANA reserved port of a project that I used to work on which got a reserved port
-/// but (sadly) never saw real production use. It's super unlikely that I'll ever have a conflict
-/// here from a system service since it's reserved!
-static DEFAULT_PORT: &str = "4774";
-
-#[derive(Parser, Debug)]
-struct GraphQLClient {
-    /// The address to bind to
-    #[arg(long, default_value = DEFAULT_ADDR, env = "MONTAGE_ADDR")]
-    server_addr: std::net::IpAddr,
-
-    /// The port to bind to
-    #[arg(long, default_value = DEFAULT_PORT, env = "MONTAGE_PORT")]
-    server_port: u16,
-}
-
-impl GraphQLClient {
-    fn endpoint(&self) -> String {
-        format!("http://{}:{}/graphql", self.server_addr, self.server_port)
-    }
-
-    async fn make_graphql_request<ResponseData, Vars>(
-        &self,
-        query: Operation<ResponseData, Vars>,
-    ) -> Result<GraphQlResponse<ResponseData>>
-    where
-        Vars: Serialize,
-        ResponseData: DeserializeOwned + 'static,
-    {
-        let client = reqwest::Client::new();
-
-        client
-            .post(self.endpoint())
-            .run_graphql(query)
-            .await
-            .wrap_err("GraphQL request failed")
-    }
-
-    fn request(&self) -> Result<Request> {
-        let mut request = format!("ws://{}:{}", self.server_addr, self.server_port)
-            .into_client_request()
-            .wrap_err("could not make a request with addresses provided")?;
-
-        request.headers_mut().insert(
-            "Sec-WebSocket-Protocol",
-            HeaderValue::from_str("graphql-transport-ws").unwrap(),
-        );
-
-        Ok(request)
-    }
-}
-
 #[derive(clap::Subcommand, Debug)]
 enum Command {
     /// Start a task
@@ -364,16 +343,16 @@ enum Command {
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
-    Vex,
+    Vex(GraphQLClient),
 
     /// Start the server, which enables the rest of the features!
     Serve {
         /// The address to bind to
-        #[arg(long, default_value = DEFAULT_ADDR, env = "MONTAGE_ADDR")]
+        #[arg(long, default_value = crate::graphql_client::DEFAULT_ADDR, env = "MONTAGE_ADDR")]
         addr: std::net::IpAddr,
 
         /// The port to bind to
-        #[arg(long, default_value = DEFAULT_PORT, env = "MONTAGE_PORT")]
+        #[arg(long, default_value = crate::graphql_client::DEFAULT_PORT, env = "MONTAGE_PORT")]
         port: u16,
     },
 
