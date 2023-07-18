@@ -11,12 +11,9 @@ use clap::Parser;
 use client::current_session_updates::CurrentSessionUpdates;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
-use cynic::{
-    GraphQlResponse, MutationBuilder, Operation, QueryBuilder, StreamingOperation,
-    SubscriptionBuilder,
-};
+use cynic::{GraphQlResponse, MutationBuilder, Operation, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
-use graphql_ws_client::{graphql::Cynic, CynicClientBuilder, SubscriptionStream};
+use graphql_ws_client::CynicClientBuilder;
 use rand::seq::SliceRandom;
 use serde::{de::DeserializeOwned, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
@@ -136,10 +133,27 @@ impl Opts {
                 };
             }
             Command::Watch(client) => {
-                let mut stream = client.subscribe_to_current_sesion().await?;
-                while let Some(item) = stream.next().await {
+                let query = CurrentSessionUpdates::build(());
+                let (connection, _) = async_tungstenite::tokio::connect_async(client.request()?)
+                    .await
+                    .unwrap();
+
+                let (sink, stream) = connection.split();
+                let mut client = CynicClientBuilder::new()
+                    .build(stream, sink, TokioSpawner::current())
+                    .await
+                    .unwrap();
+
+                let mut sessions_stream = client
+                    .streaming_operation(query)
+                    .await
+                    .wrap_err("could not start streaming")?;
+
+                while let Some(item) = sessions_stream.next().await {
                     println!("{:?}", item);
                 }
+
+                // TODO: gracefully drop the connection
             }
             Command::Xbar(client) => {
                 let http_client = reqwest::Client::new();
@@ -300,28 +314,6 @@ impl GraphQLClient {
         );
 
         Ok(request)
-    }
-
-    async fn subscribe_to_current_sesion(
-        &self,
-    ) -> Result<SubscriptionStream<Cynic, StreamingOperation<CurrentSessionUpdates>>> {
-        let query = CurrentSessionUpdates::build(());
-
-        let (connection, _) = async_tungstenite::tokio::connect_async(self.request()?)
-            .await
-            .unwrap();
-
-        let (sink, stream) = connection.split();
-
-        let mut client = CynicClientBuilder::new()
-            .build(stream, sink, TokioSpawner::current())
-            .await
-            .unwrap();
-
-        client
-            .streaming_operation(query)
-            .await
-            .wrap_err("could not start streaming")
     }
 }
 
