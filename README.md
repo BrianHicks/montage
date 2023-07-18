@@ -1,37 +1,45 @@
 # Montage
 
-You know montages, right? Sylvester Stalone punching meat and running up stairs? That kinda thing. Where you make progress *snap* like that. The real world doesn't work like that, which sucks, so I Frankensteined this custom software together to keep me on track with whimsy and verve (me or the software? You'll never know!)
+You know montages, right? Sylvester Stalone punching meat and running up stairs? That kinda thing. Where you make progress *snap* like that. The real world doesn't work like that, which sucks, so I Frankensteined some custom software together to keep me on track.
 
 It does some cool stuff:
 
 - It makes me call my shots. What am I doing? Until when?
 - It annoys me when I'm not doing the thing I said I was gonna do
-- It makes a killer pour-over
+- It lets me hook into those things to write down what I did for the day
 
-Some of those things are lies.
+(Some of these things are not fully implemented yet.)
 
 To use it:
 
-1. Be me
-2. Or don't, but use OmniFocus for tasks and Obsidian (or other Markdowny thing) for notes
+1. Be me, or at least be named Brian, or at least be OK with being called Brian by a computer.
+2. Use macOS, OmniFocus for tasks, and Obsidian (or other Markdowny thing) for notes.
 
-## This header marks the start of the usage instructions
+## How to use!
 
-Before you start, run `montage vex` in some terminal or background job and leave it running. That's the bit that annoys you when there's nothing going on.
+Before you start, run `montage serve` in some terminal or background job and leave it running. That's the part that manages all the state.
 
-If you just wanna use the command line you can run `montage start "some thing you wanna do" --duration 25`. The number there is how long you're gonna be doing the thing. Otherwise, point OmniFocus at the script in this directory, then click the button it provides in the UI to start a thing.
+Then start a task! If you just wanna use the command line you can run `montage start "some thing you wanna do" --duration 25`. The number there is how long you're gonna be doing the thing.
 
-You can also run `montage break --duration 5` (minutes again there) to get the noisemaker off your back for a while.
+You can also run `montage break --duration 5` (minutes again there) to take a break.
 
-You can also run `montage xbar` to get a status bar that you can use to control the program in [xbar](https://xbarapp.com/) 
+The rest is integrations.
 
-### Scripts
+### Vex
 
-Montage can automatically execute some scripts in a directory. They have to be named in a specific way:
+`montage vex` will keep track of what you're doing and start saying things every two seconds (by default) when the time you gave expires. Just keep it running in some terminal.
 
-- `on-start` is run when you start doing something
-- `on-break` is run when you start a break
-- `on-stop` is run when a break or session stops
+### Xbar
+
+You can run `montage xbar` to get a status bar appropriate for controlling tasks in [xbar](https://xbarapp.com/) 
+
+### OmniFocus
+
+There's a (VERY VERY WORK IN PROGRESS) OmniFocus plugin here. Point OmniFocus at it and click buttons to start tasks and breaks.
+
+### Watch
+
+`montage watch` will give a debug view of whatever tasks you want. You can't use it for much more than debugging right now, and it'll probably be removed.
 
 ## License
 
