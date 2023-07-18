@@ -89,6 +89,34 @@ impl Opts {
                     Self::humanize_time_12hr(session.projected_end_time),
                 )
             }
+            Command::Extend {
+                by,
+                to,
+                client_info,
+            } => {
+                let query = if let Some(duration) = by {
+                    client::extend_by::ExtendByMutation::build(
+                        client::extend_by::ExtendByMutationVariables {
+                            duration: *duration,
+                        },
+                    )
+                } else {
+                    todo!("extend to");
+                };
+
+                let session = client_info
+                    .make_graphql_request(query)
+                    .await?
+                    .data
+                    .expect("a non-null session")
+                    .extend_by;
+
+                println!(
+                    "{} extended to end at {}",
+                    session.description,
+                    Self::humanize_time_12hr(session.projected_end_time),
+                );
+            }
             Command::Watch(client_info) => {
                 let query = client::current_session_updates::CurrentSessionUpdates::build(());
 
@@ -294,6 +322,18 @@ enum Command {
         /// How long you're going to rest, in ISO8601 duration format
         #[arg(long)]
         duration: Option<iso8601::Duration>,
+
+        #[command(flatten)]
+        client_info: GraphQLClientInfo,
+    },
+
+    /// Add some more time onto the current session
+    Extend {
+        #[arg(long, conflicts_with = "to", required_unless_present = "to")]
+        by: Option<iso8601::Duration>,
+
+        #[arg(long, conflicts_with = "by", required_unless_present = "by")]
+        to: Option<DateTime<Local>>,
 
         #[command(flatten)]
         client_info: GraphQLClientInfo,

@@ -1,0 +1,12 @@
+---
+source: src/client/extend_by.rs
+expression: operation.query
+---
+mutation ExtendByMutation($duration: Duration!) {
+  extendBy(duration: $duration) {
+    description
+    projectedEndTime
+  }
+}
+
+
