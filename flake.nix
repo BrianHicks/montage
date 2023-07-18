@@ -1,14 +1,33 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    naersk.inputs.nixpkgs.follows = "nixpkgs";
+    naersk.url = "github:nmattia/naersk";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import inputs.nixpkgs { inherit system; };
-      in { 
+      let
+        pkgs = import inputs.nixpkgs { inherit system; };
+        naersk-lib = inputs.naersk.lib."${system}";
+      in
+      rec {
         formatter = pkgs.nixpkgs-fmt;
+
+        # `nix build`
+        packages.montage = naersk-lib.buildPackage {
+          root = ./.;
+          buildInputs = [ pkgs.libiconv pkgs.rustPackages.clippy ];
+
+          doCheck = true;
+          checkPhase = ''
+            cargo test
+            cargo clippy -- --deny warnings
+          '';
+        };
+        defaultPackage = packages.montage;
+        overlay = final: prev: { montage = packages.montage; };
 
         devShell =
           pkgs.mkShell {
