@@ -131,11 +131,29 @@ impl Session {
     }
 
     pub async fn extend_by(pool: &Pool<Sqlite>, duration: Duration) -> Result<Self> {
-        Self::update_duration(pool, |current| current.duration + duration).await
+        let res = Self::update_duration(pool, |current| current.duration + duration).await?;
+
+        tracing::info!(
+            description = res.description,
+            kind = ?res.kind,
+            duration = ?duration,
+            "extended session by some time"
+        );
+
+        Ok(res)
     }
 
     pub async fn extend_to(pool: &Pool<Sqlite>, target: DateTime<Local>) -> Result<Self> {
-        Self::update_duration(pool, |current| target - current.start_time).await
+        let res = Self::update_duration(pool, |current| target - current.start_time).await?;
+
+        tracing::info!(
+            description = res.description,
+            kind = ?res.kind,
+            target = ?target,
+            "extended session to new time"
+        );
+
+        Ok(res)
     }
 
     async fn update_duration<F>(pool: &Pool<Sqlite>, get_new_duration: F) -> Result<Self>
