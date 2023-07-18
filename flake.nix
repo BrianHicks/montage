@@ -23,6 +23,7 @@
               pkgs.sqlx-cli
               pkgs.cargo-insta
               pkgs.cargo-machete
+              pkgs.cargo-outdated
 
               # for the OmniFocus scripts
               pkgs.nodePackages.npm
