@@ -45,7 +45,7 @@ impl Opts {
             Command::Start {
                 description,
                 duration,
-                client_info,
+                client,
             } => {
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
@@ -54,7 +54,7 @@ impl Opts {
                         duration: *duration,
                     });
 
-                let session = client_info
+                let session = client
                     .make_graphql_request(query)
                     .await?
                     .data
@@ -71,7 +71,7 @@ impl Opts {
             Command::Break {
                 description,
                 duration,
-                client_info,
+                client,
             } => {
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
@@ -80,7 +80,7 @@ impl Opts {
                         duration: *duration,
                     });
 
-                let session = client_info
+                let session = client
                     .make_graphql_request(query)
                     .await?
                     .data
@@ -96,7 +96,7 @@ impl Opts {
             Command::Extend {
                 by,
                 to,
-                client_info,
+                client,
             } => {
                 if let Some(duration) = by {
                     let query = client::extend_by::ExtendByMutation::build(
@@ -105,7 +105,7 @@ impl Opts {
                         },
                     );
 
-                    let session = client_info
+                    let session = client
                         .make_graphql_request(query)
                         .await?
                         .data
@@ -123,7 +123,7 @@ impl Opts {
                         client::extend_to::ExtendToMutationVariables { target: *target },
                     );
 
-                    let session = client_info
+                    let session = client
                         .make_graphql_request(query)
                         .await?
                         .data
@@ -139,18 +139,18 @@ impl Opts {
                     color_eyre::eyre::bail!("got neither --by nor --to. This should not happen!");
                 };
             }
-            Command::Watch(client_info) => {
-                let mut stream = client_info.subscribe_to_current_sesion().await?;
+            Command::Watch(client) => {
+                let mut stream = client.subscribe_to_current_sesion().await?;
                 while let Some(item) = stream.next().await {
                     println!("{:?}", item);
                 }
             }
-            Command::Xbar(client_info) => {
-                let client = reqwest::Client::new();
+            Command::Xbar(client) => {
+                let http_client = reqwest::Client::new();
 
                 let query = client::current_session::CurrentSessionQuery::build(());
 
-                match client.post(client_info.endpoint()).run_graphql(query).await {
+                match http_client.post(client.endpoint()).run_graphql(query).await {
                     Err(CynicReqwestError::ReqwestError(err)) if err.is_connect() => {
                         // a message for the xbar status line
                         eprintln!("⚠️ failed to connect to server");
@@ -261,7 +261,7 @@ static DEFAULT_ADDR: &str = "127.0.0.1";
 static DEFAULT_PORT: &str = "4774";
 
 #[derive(Parser, Debug)]
-struct GraphQLClientInfo {
+struct GraphQLClient {
     /// The address to bind to
     #[arg(long, default_value = DEFAULT_ADDR, env = "MONTAGE_ADDR")]
     server_addr: std::net::IpAddr,
@@ -271,7 +271,7 @@ struct GraphQLClientInfo {
     server_port: u16,
 }
 
-impl GraphQLClientInfo {
+impl GraphQLClient {
     fn endpoint(&self) -> String {
         format!("http://{}:{}/graphql", self.server_addr, self.server_port)
     }
@@ -341,7 +341,7 @@ enum Command {
         duration: Option<iso8601::Duration>,
 
         #[command(flatten)]
-        client_info: GraphQLClientInfo,
+        client: GraphQLClient,
     },
 
     /// Take a break in between tasks
@@ -354,7 +354,7 @@ enum Command {
         duration: Option<iso8601::Duration>,
 
         #[command(flatten)]
-        client_info: GraphQLClientInfo,
+        client: GraphQLClient,
     },
 
     /// Add some more time onto the current session
@@ -366,13 +366,13 @@ enum Command {
         to: Option<DateTime<Local>>,
 
         #[command(flatten)]
-        client_info: GraphQLClientInfo,
+        client: GraphQLClient,
     },
 
-    Watch(GraphQLClientInfo),
+    Watch(GraphQLClient),
 
     /// Show an xbar status message
-    Xbar(GraphQLClientInfo),
+    Xbar(GraphQLClient),
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
