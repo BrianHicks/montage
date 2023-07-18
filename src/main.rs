@@ -93,11 +93,7 @@ impl Opts {
                     Self::humanize_time_12hr(session.projected_end_time),
                 )
             }
-            Command::Extend {
-                by,
-                to,
-                client,
-            } => {
+            Command::Extend { by, to, client } => {
                 if let Some(duration) = by {
                     let query = client::extend_by::ExtendByMutation::build(
                         client::extend_by::ExtendByMutationVariables {
