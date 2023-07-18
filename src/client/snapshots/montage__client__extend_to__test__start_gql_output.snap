@@ -1,0 +1,12 @@
+---
+source: src/client/extend_to.rs
+expression: operation.query
+---
+mutation ExtendToMutation($target: DateTime!) {
+  extendTo(target: $target) {
+    projectedEndTime
+    description
+  }
+}
+
+

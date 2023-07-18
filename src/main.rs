@@ -94,28 +94,46 @@ impl Opts {
                 to,
                 client_info,
             } => {
-                let query = if let Some(duration) = by {
-                    client::extend_by::ExtendByMutation::build(
+                if let Some(duration) = by {
+                    let query = client::extend_by::ExtendByMutation::build(
                         client::extend_by::ExtendByMutationVariables {
                             duration: *duration,
                         },
-                    )
+                    );
+
+                    let session = client_info
+                        .make_graphql_request(query)
+                        .await?
+                        .data
+                        .expect("a non-null session")
+                        .extend_by;
+
+                    println!(
+                        "{} extended by {} minutes to end at {}",
+                        session.description,
+                        Self::humanize_duration_minutes(*duration)?,
+                        Self::humanize_time_12hr(session.projected_end_time),
+                    );
+                } else if let Some(target) = to {
+                    let query = client::extend_to::ExtendToMutation::build(
+                        client::extend_to::ExtendToMutationVariables { target: *target },
+                    );
+
+                    let session = client_info
+                        .make_graphql_request(query)
+                        .await?
+                        .data
+                        .expect("a non-null session")
+                        .extend_to;
+
+                    println!(
+                        "{} extended to end at {}",
+                        session.description,
+                        Self::humanize_time_12hr(session.projected_end_time),
+                    );
                 } else {
-                    todo!("extend to");
+                    color_eyre::eyre::bail!("got neither --by nor --to. This should not happen!");
                 };
-
-                let session = client_info
-                    .make_graphql_request(query)
-                    .await?
-                    .data
-                    .expect("a non-null session")
-                    .extend_by;
-
-                println!(
-                    "{} extended to end at {}",
-                    session.description,
-                    Self::humanize_time_12hr(session.projected_end_time),
-                );
             }
             Command::Watch(client_info) => {
                 let query = client::current_session_updates::CurrentSessionUpdates::build(());
