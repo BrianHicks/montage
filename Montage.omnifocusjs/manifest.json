@@ -8,6 +8,10 @@
     {
       "image": "clock",
       "identifier": "start"
+    },
+    {
+      "image": "cup.and.saucer",
+      "identifier": "break"
     }
   ]
 }
