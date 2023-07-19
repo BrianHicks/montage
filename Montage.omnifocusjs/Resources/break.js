@@ -41,10 +41,5 @@
             console.error(err);
         }
     });
-    action.validate = function (selection) {
-        return (selection.tasks.length === 1 ||
-            selection.tags.length === 1 ||
-            selection.projects.length === 1);
-    };
     return action;
 })();
