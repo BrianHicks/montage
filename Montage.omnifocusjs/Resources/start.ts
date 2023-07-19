@@ -10,12 +10,7 @@
         if (task.estimatedMinutes) {
           suggestedMinutes = task.estimatedMinutes.toString();
         }
-
-        if (task.containingProject) {
-          suggestedDescription = task.containingProject.name;
-        } else {
-          suggestedDescription = task.name;
-        }
+        suggestedDescription = task.name;
       } else if (selection.tags) {
         suggestedDescription = selection.tags[0].name;
       } else if (selection.projects[0]) {
