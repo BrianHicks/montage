@@ -36,7 +36,7 @@
             }
             req.method = "POST";
             req.bodyString = JSON.stringify({
-                query: "mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) { start(description: $description, kind: $kind, duration: $duration) { description duration projectedEndTime } }",
+                query: "mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) { start(description: $description, kind: $kind, duration: $duration) { duration projectedEndTime } }",
                 variables: {
                     description: values.description,
                     kind: "TASK",
@@ -54,8 +54,10 @@
                 throw "body string was null. Did the request succeed?";
             }
             let data = JSON.parse(resp.bodyString).data.start;
+            console.log(JSON.stringify(data));
+            let minutes = parseInt(data.duration.match(/PT(\d+)S/)[1], 10);
             let endTime = new Date(data.projectedEndTime);
-            new Alert("Started session", `Started "${data.description}" for ${data.duration} until ${endTime.getHours()}:${endTime.getMinutes()}`).show();
+            new Alert("Started session", `Started task for ${Math.round(minutes / 60)} minutes, until ${endTime.getHours()}:${endTime.getMinutes()}`).show();
         }
         catch (err) {
             console.error(err);
