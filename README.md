@@ -35,7 +35,7 @@ You can run `montage xbar` to get a status bar appropriate for controlling tasks
 
 ### OmniFocus
 
-There's a (VERY VERY WORK IN PROGRESS) OmniFocus plugin here. Point OmniFocus at it and click buttons to start tasks and breaks.
+There's a OmniFocus plugin here, at `Montage.omnifocusjs`. Point OmniFocus at it and click buttons to start tasks and breaks.
 
 ### Watch
 

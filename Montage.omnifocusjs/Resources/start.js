@@ -38,9 +38,9 @@
             req.bodyString = JSON.stringify({
                 query: "mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) { start(description: $description, kind: $kind, duration: $duration) { description duration projectedEndTime } }",
                 variables: {
-                    "description": values.description,
-                    "kind": "TASK",
-                    "duration": `PT${values.minutes}M`,
+                    description: values.description,
+                    kind: "TASK",
+                    duration: `PT${values.minutes}M`,
                 },
             });
             req.headers = { "Content-Type": "application/json" };
