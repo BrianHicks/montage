@@ -54,7 +54,8 @@
                 throw "body string was null. Did the request succeed?";
             }
             let data = JSON.parse(resp.bodyString).data.start;
-            new Alert("Started session", `Started "${data.description}" for ${data.duration} until ${data.projectedEndTime}`).show();
+            let endTime = new Date(data.projectedEndTime);
+            new Alert("Started session", `Started "${data.description}" for ${data.duration} until ${endTime.getHours()}:${endTime.getMinutes()}`).show();
         }
         catch (err) {
             console.error(err);

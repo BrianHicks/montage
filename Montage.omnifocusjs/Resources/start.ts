@@ -79,9 +79,13 @@
         projectedEndTime: string;
       };
 
+      let endTime = new Date(data.projectedEndTime);
+
       new Alert(
         "Started session",
-        `Started "${data.description}" for ${data.duration} until ${data.projectedEndTime}`
+        `Started "${data.description}" for ${
+          data.duration
+        } until ${endTime.getHours()}:${endTime.getMinutes()}`
       ).show();
     } catch (err) {
       console.error(err);
