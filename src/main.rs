@@ -9,7 +9,7 @@ use crate::tokio_spawner::TokioSpawner;
 use chrono::{DateTime, Duration, Local};
 use clap::Parser;
 use client::current_session_updates::CurrentSessionUpdates;
-use color_eyre::eyre::{eyre, Result, WrapErr};
+use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
@@ -38,14 +38,14 @@ impl Opts {
             Command::Start {
                 description,
                 duration,
+                until,
                 client,
             } => {
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
                         kind: client::start::Kind::Task,
-                        duration: duration
-                            .map(|d| iso8601::duration(&format!("PT{}M", d)).unwrap()),
+                        duration: Self::duration_from_options(duration, until)?,
                     });
 
                 let session = client
@@ -65,6 +65,7 @@ impl Opts {
             Command::Break {
                 description: description_opt,
                 duration,
+                until,
                 client,
             } => {
                 let description = match description_opt {
@@ -76,8 +77,7 @@ impl Opts {
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description: &description,
                         kind: client::start::Kind::Break,
-                        duration: duration
-                            .map(|d| iso8601::duration(&format!("PT{}M", d)).unwrap()),
+                        duration: Self::duration_from_options(duration, until)?,
                     });
 
                 let session = client
@@ -132,7 +132,7 @@ impl Opts {
                         Self::humanize_time_12hr(session.projected_end_time),
                     );
                 } else {
-                    color_eyre::eyre::bail!("got neither --by nor --to. This should not happen!");
+                    bail!("got neither --by nor --to. This should not happen!");
                 };
             }
             Command::Watch(client) => {
@@ -260,6 +260,33 @@ impl Opts {
 
         Ok(pool)
     }
+
+    fn duration_from_options(
+        duration: &Option<usize>,
+        until: &Option<DateTime<Local>>,
+    ) -> Result<Option<iso8601::Duration>> {
+        match (duration, until) {
+            (Some(minutes), None) => {
+                let duration_from_minutes = iso8601::duration(&format!("PT{}M", minutes))
+                    .expect("configuration error: could not parse that amount of minutes");
+                Ok(Some(duration_from_minutes))
+            }
+            (None, Some(time)) => {
+                let now = Local::now();
+                let duration = if now > *time {
+                    now - *time
+                } else {
+                    *time - now
+                };
+
+                Ok(Some(iso8601::duration(&duration.to_string()).unwrap()))
+            }
+            (Some(_), Some(_)) => {
+                bail!("got both --duration and --until. Configuration error in montage!")
+            }
+            (None, None) => Ok(None),
+        }
+    }
 }
 
 #[derive(clap::Subcommand, Debug)]
@@ -270,8 +297,12 @@ enum Command {
         description: String,
 
         /// The length of the task, in minutes
-        #[arg(long)]
+        #[arg(long, conflicts_with = "until")]
         duration: Option<usize>,
+
+        /// Work on a task until a specific time
+        #[arg(long, conflicts_with = "duration")]
+        until: Option<DateTime<Local>>,
 
         #[command(flatten)]
         client: GraphQLClient,
@@ -284,8 +315,12 @@ enum Command {
         description: Option<String>,
 
         /// The length of the break, in minutes
-        #[arg(long)]
+        #[arg(long, conflicts_with = "until")]
         duration: Option<usize>,
+
+        /// Break until a specific time
+        #[arg(long, conflicts_with = "duration")]
+        until: Option<DateTime<Local>>,
 
         #[command(flatten)]
         client: GraphQLClient,
