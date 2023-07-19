@@ -35,16 +35,17 @@ struct Opts {
 impl Opts {
     async fn run(&self) -> Result<()> {
         match &self.command {
-            Command::Start {
+            Command::Start(StartOrBreak {
                 description,
                 duration,
                 client,
-            } => {
+            }) => {
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
                         kind: client::start::Kind::Task,
-                        duration: *duration,
+                        duration: duration
+                            .map(|d| iso8601::duration(&format!("PT{}M", d)).unwrap()),
                     });
 
                 let session = client
@@ -61,16 +62,17 @@ impl Opts {
                     Self::humanize_time_12hr(session.projected_end_time),
                 )
             }
-            Command::Break {
+            Command::Break(StartOrBreak {
                 description,
                 duration,
                 client,
-            } => {
+            }) => {
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
                         kind: client::start::Kind::Break,
-                        duration: *duration,
+                        duration: duration
+                            .map(|d| iso8601::duration(&format!("PT{}M", d)).unwrap()),
                     });
 
                 let session = client
@@ -255,33 +257,26 @@ impl Opts {
     }
 }
 
+#[derive(Parser, Debug)]
+struct StartOrBreak {
+    /// The name of the task you're working on
+    description: String,
+
+    /// How long you're planning to work, in minutes
+    #[arg(long)]
+    duration: Option<usize>,
+
+    #[command(flatten)]
+    client: GraphQLClient,
+}
+
 #[derive(clap::Subcommand, Debug)]
 enum Command {
     /// Start a task
-    Start {
-        /// The name of the task you're working on
-        description: String,
-
-        /// How long you're planning to work, in ISO8601 duration format
-        #[arg(long)]
-        duration: Option<iso8601::Duration>,
-
-        #[command(flatten)]
-        client: GraphQLClient,
-    },
+    Start(StartOrBreak),
 
     /// Take a break in between tasks
-    Break {
-        #[arg(long, default_value = "Break")]
-        description: String,
-
-        /// How long you're going to rest, in ISO8601 duration format
-        #[arg(long)]
-        duration: Option<iso8601::Duration>,
-
-        #[command(flatten)]
-        client: GraphQLClient,
-    },
+    Break(StartOrBreak),
 
     /// Add some more time onto the current session
     Extend {
