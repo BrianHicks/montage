@@ -26,7 +26,11 @@
 
       let focusForm = new Form();
       focusForm.addField(
-        new Form.Field.String("description", "Description", suggestedDescription)
+        new Form.Field.String(
+          "description",
+          "Description",
+          suggestedDescription
+        )
       );
       focusForm.addField(
         new Form.Field.String("minutes", "Minutes", suggestedMinutes)
@@ -48,11 +52,12 @@
 
       req.method = "POST";
       req.bodyString = JSON.stringify({
-        query: "mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) { start(description: $description, kind: $kind, duration: $duration) { description duration projectedEndTime } }",
+        query:
+          "mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) { start(description: $description, kind: $kind, duration: $duration) { description duration projectedEndTime } }",
         variables: {
-          "description": values.description,
-          "kind": "TASK",
-          "duration": `PT${values.minutes}M`,
+          description: values.description,
+          kind: "TASK",
+          duration: `PT${values.minutes}M`,
         },
       });
       req.headers = { "Content-Type": "application/json" };
@@ -69,9 +74,9 @@
       }
 
       let data = JSON.parse(resp.bodyString).data.start as {
-        description: string,
-        duration: string,
-        projectedEndTime: string,
+        description: string;
+        duration: string;
+        projectedEndTime: string;
       };
 
       new Alert(
@@ -83,7 +88,7 @@
     }
   });
 
-  action.validate = function(selection: Selection) {
+  action.validate = function (selection: Selection) {
     return (
       selection.tasks.length === 1 ||
       selection.tags.length === 1 ||
