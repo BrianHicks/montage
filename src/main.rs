@@ -35,11 +35,11 @@ struct Opts {
 impl Opts {
     async fn run(&self) -> Result<()> {
         match &self.command {
-            Command::Start(StartOrBreak {
+            Command::Start {
                 description,
                 duration,
                 client,
-            }) => {
+            } => {
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
                         description,
@@ -62,14 +62,19 @@ impl Opts {
                     Self::humanize_time_12hr(session.projected_end_time),
                 )
             }
-            Command::Break(StartOrBreak {
-                description,
+            Command::Break {
+                description: description_opt,
                 duration,
                 client,
-            }) => {
+            } => {
+                let description = match description_opt {
+                    Some(description) => description.clone(),
+                    None => String::from("Break"),
+                };
+
                 let query =
                     client::start::StartMutation::build(client::start::StartMutationVariables {
-                        description,
+                        description: &description,
                         kind: client::start::Kind::Break,
                         duration: duration
                             .map(|d| iso8601::duration(&format!("PT{}M", d)).unwrap()),
@@ -257,26 +262,34 @@ impl Opts {
     }
 }
 
-#[derive(Parser, Debug)]
-struct StartOrBreak {
-    /// The name of the task you're working on
-    description: String,
-
-    /// How long you're planning to work, in minutes
-    #[arg(long)]
-    duration: Option<usize>,
-
-    #[command(flatten)]
-    client: GraphQLClient,
-}
-
 #[derive(clap::Subcommand, Debug)]
 enum Command {
     /// Start a task
-    Start(StartOrBreak),
+    Start {
+        /// The task you'll be doing
+        description: String,
+
+        /// The length of the task, in minutes
+        #[arg(long)]
+        duration: Option<usize>,
+
+        #[command(flatten)]
+        client: GraphQLClient,
+    },
 
     /// Take a break in between tasks
-    Break(StartOrBreak),
+    Break {
+        /// What you'll be doing
+        #[clap(default_value = "Break")]
+        description: Option<String>,
+
+        /// The length of the break, in minutes
+        #[arg(long)]
+        duration: Option<usize>,
+
+        #[command(flatten)]
+        client: GraphQLClient,
+    },
 
     /// Add some more time onto the current session
     Extend {
