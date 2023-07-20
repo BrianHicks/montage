@@ -192,6 +192,22 @@ impl Session {
         .await
         .map_err(Error::Query)
     }
+
+    pub async fn for_date(pool: &Pool<Sqlite>, date: DateTime<Local>) -> Result<Vec<Self>> {
+        let today = date.format("%Y-%M-%D").to_string();
+
+        sqlx::query_as::<_, Self>(indoc! {"
+            SELECT *
+            FROM sessions
+            WHERE start_time >= ?
+            OR end_time <= ?
+        "})
+        .bind(&today)
+        .bind(&today)
+        .fetch_all(pool)
+        .await
+        .map_err(Error::Query)
+    }
 }
 
 #[cfg(test)]
