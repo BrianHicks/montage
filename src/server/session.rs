@@ -39,6 +39,11 @@ impl Session {
     async fn remaining_time(&self) -> Option<Duration> {
         self.get_remaining_time()
     }
+
+    /// If the session is finished, how much time did it actually take?
+    async fn actual_duration(&self) -> Option<Duration> {
+        self.get_actual_duration()
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -234,6 +239,10 @@ impl Session {
         };
 
         Some(end - start)
+    }
+
+    pub fn get_actual_duration(&self) -> Option<Duration> {
+        self.end_time.map(|end_time| end_time - self.start_time)
     }
 }
 
