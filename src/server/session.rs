@@ -89,16 +89,10 @@ impl Session {
         }
     }
 
-    pub async fn start(
-        pool: &Pool<Sqlite>,
-        kind: Kind,
-        description: &str,
-        start_time: DateTime<Local>,
-        duration: Duration,
-    ) -> Result<Self> {
+    async fn stop_all(pool: &Pool<Sqlite>, as_of: DateTime<Local>) -> Result<()> {
         let closed_existing_sessions_receipt =
             sqlx::query("UPDATE sessions SET end_time = ? WHERE end_time IS NULL")
-                .bind(start_time)
+                .bind(as_of)
                 .execute(pool)
                 .await
                 .map_err(Error::Query)?;
@@ -107,6 +101,18 @@ impl Session {
             count = closed_existing_sessions_receipt.rows_affected(),
             "closed existing sessions"
         );
+
+        Ok(())
+    }
+
+    pub async fn start(
+        pool: &Pool<Sqlite>,
+        kind: Kind,
+        description: &str,
+        start_time: DateTime<Local>,
+        duration: Duration,
+    ) -> Result<Self> {
+        Self::stop_all(&pool, start_time).await?;
 
         let res = sqlx::query_as::<_, Session>(indoc! {"
             INSERT INTO sessions (kind, description, start_time, duration)
