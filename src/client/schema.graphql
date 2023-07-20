@@ -22,11 +22,11 @@ What kind of session are we going to have?
 """
 enum Kind {
 	"""
-	A longer session focused on doing something
+	A session focused on doing something
 	"""
 	TASK
 	"""
-	A shorter recovery session
+	A recovery session
 	"""
 	BREAK
 }

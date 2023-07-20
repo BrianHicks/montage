@@ -4,10 +4,10 @@ use chrono::Duration;
 #[derive(async_graphql::Enum, Debug, PartialEq, Eq, Copy, Clone, sqlx::Type)]
 #[sqlx(rename_all = "lowercase")]
 pub enum Kind {
-    /// A longer session focused on doing something
+    /// A session focused on doing something
     Task,
 
-    /// A shorter recovery session
+    /// A recovery session
     Break,
 }
 
