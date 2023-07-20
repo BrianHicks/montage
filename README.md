@@ -41,6 +41,10 @@ There's a OmniFocus plugin here, at `Montage.omnifocusjs`. Point OmniFocus at it
 
 `montage watch` will give a debug view of whatever tasks you want. You can't use it for much more than debugging right now, and it'll probably be removed.
 
+### Report
+
+`montage report --day` will give you a report for the day's work. ASCII! It'll also tell you how much time was spent on tasks, short breaks (less than 30 minutes) and long breaks (more than 30 minutes.)
+
 ## License
 
 BSD 3-Clause
