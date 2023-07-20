@@ -49,7 +49,12 @@ type Mutation {
 type Query {
 	version: String!
 	currentSession: Session
-	sessionsForDate(when: DateTime!): [Session!]!
+	"""
+	Get a report on the sessions in a given range (start and end will be treated as a date
+	range inclusive of sessions on both the start and end days. To get just a single day, pass
+	the same day twice.)
+	"""
+	report(start: DateTime!, end: DateTime!): [Session!]!
 }
 
 """

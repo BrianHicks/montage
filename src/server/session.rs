@@ -199,9 +199,13 @@ impl Session {
         .map_err(Error::Query)
     }
 
-    pub async fn for_date(pool: &Pool<Sqlite>, date: DateTime<Local>) -> Result<Vec<Self>> {
-        let today = date.format("%Y-%m-%d").to_string();
-        let tomorrow = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
+    pub async fn for_range_inclusive(
+        pool: &Pool<Sqlite>,
+        start: DateTime<Local>,
+        end: DateTime<Local>,
+    ) -> Result<Vec<Self>> {
+        let start_date = start.format("%Y-%m-%d").to_string();
+        let end_date = (end + Duration::days(1)).format("%Y-%m-%d").to_string();
 
         sqlx::query_as::<_, Self>(indoc! {"
             SELECT *
@@ -209,10 +213,10 @@ impl Session {
             WHERE (start_time >= ? AND start_time < ?)
                OR (end_time   >= ? AND end_time   < ?)
         "})
-        .bind(&today)
-        .bind(&tomorrow)
-        .bind(&today)
-        .bind(&tomorrow)
+        .bind(&start_date)
+        .bind(&end_date)
+        .bind(&start_date)
+        .bind(&end_date)
         .fetch_all(pool)
         .await
         .map_err(Error::Query)
@@ -364,7 +368,10 @@ mod test {
 
         Session::stop_all(&pool, now + duration).await.unwrap();
 
-        assert_eq!(Session::for_date(&pool, now).await.unwrap(), vec![session])
+        assert_eq!(
+            Session::for_range_inclusive(&pool, now, now).await.unwrap(),
+            vec![session]
+        )
     }
 
     #[tokio::test]
@@ -377,7 +384,10 @@ mod test {
             .await
             .unwrap();
 
-        assert_eq!(Session::for_date(&pool, now).await.unwrap(), vec![session])
+        assert_eq!(
+            Session::for_range_inclusive(&pool, now, now).await.unwrap(),
+            vec![session]
+        )
     }
 
     #[tokio::test]
@@ -391,7 +401,7 @@ mod test {
             .unwrap();
 
         assert_eq!(
-            Session::for_date(&pool, now + Duration::days(1))
+            Session::for_range_inclusive(&pool, now + Duration::days(1), now + Duration::days(1))
                 .await
                 .unwrap(),
             vec![]
@@ -409,7 +419,7 @@ mod test {
             .unwrap();
 
         assert_eq!(
-            Session::for_date(&pool, now - Duration::days(1))
+            Session::for_range_inclusive(&pool, now - Duration::days(1), now - Duration::days(1))
                 .await
                 .unwrap(),
             vec![]
@@ -430,6 +440,9 @@ mod test {
 
         Session::stop_all(&pool, end).await.unwrap();
 
-        assert_eq!(Session::for_date(&pool, end).await.unwrap(), vec![session])
+        assert_eq!(
+            Session::for_range_inclusive(&pool, end, end).await.unwrap(),
+            vec![session]
+        )
     }
 }

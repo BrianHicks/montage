@@ -15,11 +15,15 @@ impl Query {
         Session::current_session(context.data().map_err(Error::Context)?).await
     }
 
-    async fn sessions_for_date(
+    /// Get a report on the sessions in a given range (start and end will be treated as a date
+    /// range inclusive of sessions on both the start and end days. To get just a single day, pass
+    /// the same day twice.)
+    async fn report(
         &self,
         context: &Context<'_>,
-        when: DateTime<Local>,
+        start: DateTime<Local>,
+        end: DateTime<Local>,
     ) -> Result<Vec<Session>> {
-        Session::for_date(context.data().map_err(Error::Context)?, when).await
+        Session::for_range_inclusive(context.data().map_err(Error::Context)?, start, end).await
     }
 }
