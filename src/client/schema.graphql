@@ -54,7 +54,17 @@ type Query {
 	range inclusive of sessions on both the start and end days. To get just a single day, pass
 	the same day twice.)
 	"""
-	report(start: DateTime!, end: DateTime!): [Session!]!
+	report(start: DateTime!, end: DateTime!): Report!
+}
+
+"""
+A report on sessons started and ended during a given day plus some statistics.
+"""
+type Report {
+	"""
+	The sessions included in this report
+	"""
+	sessions: [Session!]!
 }
 
 """

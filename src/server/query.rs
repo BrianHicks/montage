@@ -1,4 +1,5 @@
 use super::error::{Error, Result};
+use super::report::Report;
 use super::session::Session;
 use async_graphql::{Context, Object};
 use chrono::{DateTime, Local};
@@ -23,7 +24,7 @@ impl Query {
         context: &Context<'_>,
         start: DateTime<Local>,
         end: DateTime<Local>,
-    ) -> Result<Vec<Session>> {
-        Session::for_range_inclusive(context.data().map_err(Error::Context)?, start, end).await
+    ) -> Result<Report> {
+        Report::for_range_inclusive(context.data().map_err(Error::Context)?, start, end).await
     }
 }

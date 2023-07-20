@@ -2,6 +2,7 @@ mod error;
 mod kind;
 mod mutation;
 mod query;
+mod report;
 mod session;
 mod subscription;
 
