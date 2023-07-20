@@ -49,6 +49,7 @@ type Mutation {
 type Query {
 	version: String!
 	currentSession: Session
+	sessionsForDate(when: DateTime!): [Session!]!
 }
 
 """

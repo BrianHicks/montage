@@ -1,7 +1,7 @@
 use super::error::{Error, Result};
 use super::session::Session;
 use async_graphql::{Context, Object};
-use chrono::Local;
+use chrono::{DateTime, Local};
 
 pub struct Query;
 
@@ -15,7 +15,11 @@ impl Query {
         Session::current_session(context.data().map_err(Error::Context)?).await
     }
 
-    async fn sessions(&self, context: &Context<'_>) -> Result<Vec<Session>> {
-        Session::for_date(context.data().map_err(Error::Context)?, Local::now()).await
+    async fn sessions_for_date(
+        &self,
+        context: &Context<'_>,
+        when: DateTime<Local>,
+    ) -> Result<Vec<Session>> {
+        Session::for_date(context.data().map_err(Error::Context)?, when).await
     }
 }
