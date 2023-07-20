@@ -40,8 +40,9 @@ impl Session {
         self.get_remaining_time()
     }
 
-    /// If the session is finished, how much time did it actually take?
-    async fn actual_duration(&self) -> Option<Duration> {
+    /// How much time did the session actually take? If it's in progress, how much time has elapsed
+    /// so far?
+    async fn actual_duration(&self) -> Duration {
         self.get_actual_duration()
     }
 }
@@ -231,18 +232,15 @@ impl Session {
         &self,
         start: DateTime<Local>,
         end: DateTime<Local>,
-    ) -> Option<Duration> {
+    ) -> Duration {
         let start = std::cmp::max(start, self.start_time);
-        let end = match self.end_time {
-            None => return None,
-            Some(end_time) => std::cmp::min(end, end_time),
-        };
+        let end = std::cmp::min(end, self.end_time.unwrap_or_else(|| Local::now()));
 
-        Some(end - start)
+        end - start
     }
 
-    pub fn get_actual_duration(&self) -> Option<Duration> {
-        self.end_time.map(|end_time| end_time - self.start_time)
+    pub fn get_actual_duration(&self) -> Duration {
+        self.end_time.unwrap_or_else(|| Local::now()) - self.start_time
     }
 }
 
@@ -470,26 +468,6 @@ mod test {
     }
 
     #[test]
-    fn total_time_within_dates_in_progress() {
-        let now = Local::now();
-        let duration = Duration::minutes(5);
-
-        let session = Session {
-            id: 0,
-            description: String::from(""),
-            kind: Kind::Task,
-            start_time: now,
-            end_time: None,
-            duration,
-        };
-
-        assert_eq!(
-            session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
-            None,
-        )
-    }
-
-    #[test]
     fn total_time_within_dates_totally_covered() {
         let now = Local::now();
         let duration = Duration::minutes(5);
@@ -505,7 +483,7 @@ mod test {
 
         assert_eq!(
             session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
-            Some(duration),
+            duration,
         )
     }
 
@@ -525,7 +503,7 @@ mod test {
 
         assert_eq!(
             session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
-            Some(duration + Duration::days(1)),
+            duration + Duration::days(1),
         )
     }
 
@@ -545,7 +523,7 @@ mod test {
 
         assert_eq!(
             session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
-            Some(Duration::days(1)),
+            Duration::days(1),
         )
     }
 }

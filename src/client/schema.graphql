@@ -112,9 +112,10 @@ type Session {
 	"""
 	remainingTime: Duration
 	"""
-	If the session is finished, how much time did it actually take?
+	How much time did the session actually take? If it's in progress, how much time has elapsed
+	so far?
 	"""
-	actualDuration: Duration
+	actualDuration: Duration!
 }
 
 
