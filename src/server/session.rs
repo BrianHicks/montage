@@ -200,16 +200,19 @@ impl Session {
     }
 
     pub async fn for_date(pool: &Pool<Sqlite>, date: DateTime<Local>) -> Result<Vec<Self>> {
-        let today = date.format("%Y-%M-%D").to_string();
+        let today = date.format("%Y-%m-%d").to_string();
+        let tomorrow = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
 
         sqlx::query_as::<_, Self>(indoc! {"
             SELECT *
             FROM sessions
-            WHERE start_time >= ?
-            OR end_time <= ?
+            WHERE (start_time >= ? AND start_time < ?)
+               OR (end_time   >= ? AND end_time   < ?)
         "})
         .bind(&today)
+        .bind(&tomorrow)
         .bind(&today)
+        .bind(&tomorrow)
         .fetch_all(pool)
         .await
         .map_err(Error::Query)
@@ -346,5 +349,87 @@ mod test {
             extended_session.duration,
             original_session.duration + extension
         )
+    }
+
+    #[tokio::test]
+    async fn for_date_gets_finished_session() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        let mut session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+        session.end_time = Some(now + duration);
+
+        Session::stop_all(&pool, now + duration).await.unwrap();
+
+        assert_eq!(Session::for_date(&pool, now).await.unwrap(), vec![session])
+    }
+
+    #[tokio::test]
+    async fn for_date_gets_current_session() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        let session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+
+        assert_eq!(Session::for_date(&pool, now).await.unwrap(), vec![session])
+    }
+
+    #[tokio::test]
+    async fn for_date_leaves_out_sessions_before_date() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            Session::for_date(&pool, now + Duration::days(1))
+                .await
+                .unwrap(),
+            vec![]
+        )
+    }
+
+    #[tokio::test]
+    async fn for_date_leaves_out_sessions_after_date() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            Session::for_date(&pool, now - Duration::days(1))
+                .await
+                .unwrap(),
+            vec![]
+        )
+    }
+
+    #[tokio::test]
+    async fn for_date_includes_sessions_that_started_before_date_but_ended_on_date() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::days(1);
+        let end = now + duration;
+
+        let mut session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+            .await
+            .unwrap();
+        session.end_time = Some(end);
+
+        Session::stop_all(&pool, end).await.unwrap();
+
+        assert_eq!(Session::for_date(&pool, end).await.unwrap(), vec![session])
     }
 }
