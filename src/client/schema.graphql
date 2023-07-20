@@ -73,6 +73,10 @@ type Report {
 	The sessions included in this report
 	"""
 	sessions: [Session!]!
+	"""
+	Aggregate totals of the time spent in sessions
+	"""
+	totals: Totals!
 }
 
 """
@@ -115,6 +119,26 @@ type Subscription {
 	Get the current session and any future sessions while the connection is open.
 	"""
 	currentSession: Session
+}
+
+"""
+Totals for each kind of session. If sessions started on one day and ended another, and the
+start or end date would cut part of that time off, we only count to or from midnight in the
+local time zone.
+"""
+type Totals {
+	"""
+	The total time spent in short breaks (that is, those 15 minutes or less)
+	"""
+	shortBreak: Duration!
+	"""
+	The total time spent in long breaks (that is, those more than 15 minutes)
+	"""
+	longBreak: Duration!
+	"""
+	The total time spent on tasks
+	"""
+	task: Duration!
 }
 
 schema {
