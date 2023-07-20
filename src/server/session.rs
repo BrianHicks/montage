@@ -221,6 +221,20 @@ impl Session {
         .await
         .map_err(Error::Query)
     }
+
+    pub fn total_time_within_dates(
+        &self,
+        start: DateTime<Local>,
+        end: DateTime<Local>,
+    ) -> Option<Duration> {
+        let start = std::cmp::max(start, self.start_time);
+        let end = match self.end_time {
+            None => return None,
+            Some(end_time) => std::cmp::min(end, end_time),
+        };
+
+        Some(end - start)
+    }
 }
 
 #[cfg(test)]
@@ -443,6 +457,86 @@ mod test {
         assert_eq!(
             Session::for_range_inclusive(&pool, end, end).await.unwrap(),
             vec![session]
+        )
+    }
+
+    #[test]
+    fn total_time_within_dates_in_progress() {
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        let session = Session {
+            id: 0,
+            description: String::from(""),
+            kind: Kind::Task,
+            start_time: now,
+            end_time: None,
+            duration,
+        };
+
+        assert_eq!(
+            session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
+            None,
+        )
+    }
+
+    #[test]
+    fn total_time_within_dates_totally_covered() {
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        let session = Session {
+            id: 0,
+            description: String::from(""),
+            kind: Kind::Task,
+            start_time: now,
+            end_time: Some(now + duration),
+            duration,
+        };
+
+        assert_eq!(
+            session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
+            Some(duration),
+        )
+    }
+
+    #[test]
+    fn total_time_within_dates_session_started_before_start_time() {
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        let session = Session {
+            id: 0,
+            description: String::from(""),
+            kind: Kind::Task,
+            start_time: now - Duration::days(2),
+            end_time: Some(now + duration),
+            duration,
+        };
+
+        assert_eq!(
+            session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
+            Some(duration + Duration::days(1)),
+        )
+    }
+
+    #[test]
+    fn total_time_within_dates_session_ended_after_end_time() {
+        let now = Local::now();
+        let duration = Duration::minutes(5);
+
+        let session = Session {
+            id: 0,
+            description: String::from(""),
+            kind: Kind::Task,
+            start_time: now,
+            end_time: Some(now + Duration::days(2)),
+            duration,
+        };
+
+        assert_eq!(
+            session.total_time_within_dates(now - Duration::days(1), now + Duration::days(1)),
+            Some(Duration::days(1)),
         )
     }
 }
