@@ -240,7 +240,7 @@ impl Opts {
                 );
                 handlebars.register_helper("time", Box::new(time));
 
-                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}{{#if include_sessions}}\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
+                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}{{#if include_sessions}}\n\n### Log\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
 
                 handlebars.register_template_string::<String>(
                     "report",
