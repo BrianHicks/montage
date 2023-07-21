@@ -247,6 +247,9 @@ impl Opts {
                 );
                 handlebars.register_helper("time", Box::new(time));
 
+                handlebars_helper!(lower: |input: String| input.to_ascii_lowercase());
+                handlebars.register_helper("lower", Box::new(lower));
+
                 let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n{{#if include_task_totals}}\n\n### Task Totals\n\n{{#each report.totals.tasks_by_description}}- {{>total_by_description}}\n{{/each}}{{/if}}{{#if include_sessions}}\n### Log\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
 
                 handlebars.register_template_string::<String>(
@@ -269,7 +272,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "session",
-                    "**{{kind}} at {{time start_time}}** {{description}} for {{hms actual_duration}}",
+                    "**{{time start_time}}** {{description}} ({{lower kind}}, {{hms actual_duration}})",
                 )?;
 
                 handlebars.register_template_string(
