@@ -11,11 +11,12 @@ use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
-use handlebars::{handlebars_helper, Handlebars};
+use handlebars::Handlebars;
 use montage_client::current_session_updates::CurrentSessionUpdates;
+use montage_client::report::Report;
+use serde::Serialize;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -172,6 +173,25 @@ impl Opts {
                     .ok_or(eyre!("data was null"))?
                     .report;
 
+                let date_format = "%A, %B %d";
+                let date_range = if report.start == report.end {
+                    format!("on {}", report.start.format(date_format))
+                } else {
+                    format!(
+                        "from {} to {}",
+                        report.start.format(date_format),
+                        report.end.format(date_format)
+                    )
+                };
+
+                #[derive(Serialize)]
+                struct Context {
+                    report: Report,
+                    date_range: String,
+                }
+
+                let context = Context { report, date_range };
+
                 let mut handlebars = Handlebars::new();
 
                 handlebars.register_template_string(
@@ -181,7 +201,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "date_range",
-                    "{{len report.sessions}} sessions from {{report.start}} to {{report.end}}",
+                    "{{len report.sessions}} sessions {{date_range}}",
                 )?;
 
                 handlebars.register_template_string(
@@ -194,10 +214,7 @@ impl Opts {
                     "**{{kind}} at {{start_time}}** {{description}} for {{actual_duration}}",
                 )?;
 
-                let mut data = BTreeMap::new();
-                data.insert("report", report);
-
-                println!("{}", handlebars.render("report", &data)?);
+                println!("{}", handlebars.render("report", &context)?);
             }
             Command::Watch(client) => {
                 let query = CurrentSessionUpdates::build(());
