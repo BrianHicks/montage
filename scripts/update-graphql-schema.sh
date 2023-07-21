@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd $(git rev-parse --show-toplevel)
 
-CLIENT_FILE=src/client/schema.graphql
+CLIENT_FILE=$(pwd)/montage_client/schema.graphql
 
 SCHEMA="$(cargo run show-graphql-schema)"
 
