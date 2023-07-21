@@ -127,6 +127,15 @@ type Subscription {
 }
 
 """
+A description (of a task or break) and the total time spent on it during the report's time
+period.
+"""
+type TotalByDescription {
+	description: String!
+	total: Duration!
+}
+
+"""
 Totals for each kind of session. If sessions started on one day and ended another, and the
 start or end date would cut part of that time off, we only count to or from midnight in the
 local time zone. Incomplete sessions are included in these totals!
@@ -144,6 +153,10 @@ type Totals {
 	The total time spent on tasks
 	"""
 	task: Duration!
+	"""
+	Total time spent on tasks, broken down by task name
+	"""
+	tasksByDescription: [TotalByDescription!]!
 }
 
 schema {
