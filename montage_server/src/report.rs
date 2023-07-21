@@ -154,6 +154,7 @@ impl Totals {
                 total,
             })
             .collect();
+        totals.tasks_by_description.sort_by_key(|t| -t.total);
 
         totals
     }
