@@ -1,6 +1,4 @@
-mod client;
 mod graphql_client;
-mod server;
 mod tokio_spawner;
 mod vexer;
 
@@ -8,12 +6,12 @@ use crate::graphql_client::GraphQLClient;
 use crate::tokio_spawner::TokioSpawner;
 use chrono::{DateTime, Duration, Local};
 use clap::Parser;
-use client::current_session_updates::CurrentSessionUpdates;
 use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
+use montage_client::current_session_updates::CurrentSessionUpdates;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
 use std::path::PathBuf;
@@ -41,12 +39,13 @@ impl Opts {
                 until,
                 client,
             } => {
-                let query =
-                    client::start::StartMutation::build(client::start::StartMutationVariables {
+                let query = montage_client::start::StartMutation::build(
+                    montage_client::start::StartMutationVariables {
                         description,
-                        kind: client::start::Kind::Task,
+                        kind: montage_client::start::Kind::Task,
                         duration: Self::duration_from_options(duration, until)?,
-                    });
+                    },
+                );
 
                 let session = client
                     .make_graphql_request(query)
@@ -73,12 +72,13 @@ impl Opts {
                     None => String::from("Break"),
                 };
 
-                let query =
-                    client::start::StartMutation::build(client::start::StartMutationVariables {
+                let query = montage_client::start::StartMutation::build(
+                    montage_client::start::StartMutationVariables {
                         description: &description,
-                        kind: client::start::Kind::Break,
+                        kind: montage_client::start::Kind::Break,
                         duration: Self::duration_from_options(duration, until)?,
-                    });
+                    },
+                );
 
                 let session = client
                     .make_graphql_request(query)
@@ -95,8 +95,8 @@ impl Opts {
             }
             Command::Extend { by, to, client } => {
                 if let Some(duration) = by {
-                    let query = client::extend_by::ExtendByMutation::build(
-                        client::extend_by::ExtendByMutationVariables {
+                    let query = montage_client::extend_by::ExtendByMutation::build(
+                        montage_client::extend_by::ExtendByMutationVariables {
                             duration: *duration,
                         },
                     );
@@ -115,8 +115,8 @@ impl Opts {
                         Self::humanize_time_12hr(session.projected_end_time),
                     );
                 } else if let Some(target) = to {
-                    let query = client::extend_to::ExtendToMutation::build(
-                        client::extend_to::ExtendToMutationVariables { target: *target },
+                    let query = montage_client::extend_to::ExtendToMutation::build(
+                        montage_client::extend_to::ExtendToMutationVariables { target: *target },
                     );
 
                     let session = client
@@ -161,7 +161,7 @@ impl Opts {
             Command::Xbar(client) => {
                 let http_client = reqwest::Client::new();
 
-                let query = client::current_session::CurrentSessionQuery::build(());
+                let query = montage_client::current_session::CurrentSessionQuery::build(());
 
                 match http_client.post(client.endpoint()).run_graphql(query).await {
                     Err(CynicReqwestError::ReqwestError(err)) if err.is_connect() => {
@@ -196,12 +196,12 @@ impl Opts {
             }
             Command::Vex(vexer) => vexer.run().await?,
             Command::Serve { addr, port } => {
-                server::serve(self.open_sqlite_database().await?, *addr, *port).await?
+                montage_server::serve(self.open_sqlite_database().await?, *addr, *port).await?
             }
             Command::ShowGraphqlSchema => {
                 println!(
                     "{}",
-                    server::schema(self.open_sqlite_database().await?)
+                    montage_server::schema(self.open_sqlite_database().await?)
                         .await?
                         .sdl()
                 )
@@ -252,11 +252,6 @@ impl Opts {
             .wrap_err_with(|| {
                 format!("could not make connection to sqlite database at `{db_path}`",)
             })?;
-
-        sqlx::migrate!("db/migrations")
-            .run(&pool)
-            .await
-            .wrap_err("could not run migrations")?;
 
         Ok(pool)
     }

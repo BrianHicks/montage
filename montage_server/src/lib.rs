@@ -8,7 +8,7 @@ mod subscription;
 
 use async_graphql::http::graphiql_source;
 use async_graphql::Schema;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{Result, WrapErr};
 use mutation::Mutation;
 use query::Query;
 use session::Session;
@@ -33,6 +33,11 @@ pub async fn schema(pool: Pool<Sqlite>) -> Result<MontageSchema> {
 }
 
 pub async fn serve(pool: Pool<Sqlite>, addr: std::net::IpAddr, port: u16) -> Result<()> {
+    sqlx::migrate!("db/migrations")
+        .run(&pool)
+        .await
+        .wrap_err("could not run migrations")?;
+
     let schema = schema(pool).await?;
 
     let graphql = async_graphql_warp::graphql(schema.clone()).and_then(

@@ -1,11 +1,11 @@
-use crate::client::current_session_updates::CurrentSessionUpdates;
-use crate::TokioSpawner;
+use super::TokioSpawner;
 use chrono::Local;
 use clap::Parser;
 use color_eyre::eyre::{bail, Result, WrapErr};
 use cynic::SubscriptionBuilder;
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
+use montage_client::current_session_updates::CurrentSessionUpdates;
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use std::process::Command;
 use tokio::select;
@@ -72,14 +72,14 @@ impl Vexer {
 
 #[derive(Debug)]
 struct State {
-    session: Option<crate::client::current_session_updates::Session>,
+    session: Option<montage_client::current_session_updates::Session>,
     rng: ThreadRng,
 }
 
 impl State {
     fn got_new_session(
         &mut self,
-        session_opt: Option<crate::client::current_session_updates::Session>,
+        session_opt: Option<montage_client::current_session_updates::Session>,
     ) {
         self.session = session_opt
     }
