@@ -226,6 +226,13 @@ impl Opts {
                 );
                 handlebars.register_helper("hms", Box::new(hms));
 
+                handlebars_helper!(
+                    time: |when: DateTime<Local>| {
+                        when.format("%-l:%M %P").to_string()
+                    }
+                );
+                handlebars.register_helper("time", Box::new(time));
+
                 handlebars.register_template_string(
                     "report",
                     "## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}",
@@ -243,7 +250,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "session",
-                    "**{{kind}} at {{start_time}}** {{description}} for {{hms actual_duration}}",
+                    "**{{kind}} at {{time start_time}}** {{description}} for {{hms actual_duration}}",
                 )?;
 
                 println!("{}", handlebars.render("report", &context)?);
