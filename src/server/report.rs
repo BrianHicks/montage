@@ -123,9 +123,9 @@ impl Totals {
             };
         }
 
-        debug_assert!(totals.short_break > Duration::zero());
-        debug_assert!(totals.long_break > Duration::zero());
-        debug_assert!(totals.task > Duration::zero());
+        debug_assert!(totals.short_break >= Duration::zero());
+        debug_assert!(totals.long_break >= Duration::zero());
+        debug_assert!(totals.task >= Duration::zero());
 
         totals
     }
