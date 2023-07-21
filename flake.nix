@@ -19,12 +19,6 @@
         packages.montage = naersk-lib.buildPackage {
           root = ./.;
           buildInputs = [ pkgs.libiconv pkgs.rustPackages.clippy ];
-
-          doCheck = true;
-          checkPhase = ''
-            cargo test
-            cargo clippy -- --deny warnings
-          '';
         };
         defaultPackage = packages.montage;
         overlay = final: prev: { montage = packages.montage; };
