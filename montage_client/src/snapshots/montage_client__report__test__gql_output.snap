@@ -1,0 +1,23 @@
+---
+source: montage_client/src/report.rs
+expression: operation.query
+---
+query ReportQuery($start: DateTime!, $end: DateTime!) {
+  report(end: $end, start: $start) {
+    start
+    end
+    totals {
+      shortBreak
+      longBreak
+      task
+    }
+    sessions {
+      description
+      actualDuration
+      kind
+      startTime
+    }
+  }
+}
+
+
