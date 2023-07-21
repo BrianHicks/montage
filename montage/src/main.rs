@@ -11,7 +11,7 @@ use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
-use handlebars::Handlebars;
+use handlebars::{handlebars_helper, Handlebars};
 use montage_client::current_session_updates::CurrentSessionUpdates;
 use montage_client::report::Report;
 use serde::Serialize;
@@ -194,6 +194,38 @@ impl Opts {
 
                 let mut handlebars = Handlebars::new();
 
+                handlebars_helper!(
+                    hms: |duration_str: String| {
+                        // TODO: make this less panicky
+                        let duration = Duration::from_std(std::time::Duration::from(
+                            iso8601::duration(&duration_str).expect("a valid ISO8601 duration string"),
+                        )).expect("duration to not be out of bounds");
+
+                        if duration.num_seconds() < 60 {
+                            format!("{}s", duration.num_seconds())
+                        } else if duration.num_minutes() < 60 {
+                            let minutes = duration.num_minutes();
+
+                            format!(
+                                "{}m {}s",
+                                minutes,
+                                duration.num_seconds() - minutes * 60,
+                            )
+                        } else {
+                            let hours = duration.num_hours();
+                            let minutes = duration.num_minutes();
+
+                            format!(
+                                "{}h {}m {}s",
+                                hours,
+                                minutes - hours * 60,
+                                duration.num_seconds() - minutes * 60,
+                            )
+                        }
+                    }
+                );
+                handlebars.register_helper("hms", Box::new(hms));
+
                 handlebars.register_template_string(
                     "report",
                     "## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}",
@@ -206,12 +238,12 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "totals",
-                    "**{{task}}** time spent on tasks, **{{short_break}}** on short breaks, and **{{long_break}}** on long breaks"
+                    "**{{hms task}}** time spent on tasks, **{{hms short_break}}** on short breaks, and **{{hms long_break}}** on long breaks"
                 )?;
 
                 handlebars.register_template_string(
                     "session",
-                    "**{{kind}} at {{start_time}}** {{description}} for {{actual_duration}}",
+                    "**{{kind}} at {{start_time}}** {{description}} for {{hms actual_duration}}",
                 )?;
 
                 println!("{}", handlebars.render("report", &context)?);
