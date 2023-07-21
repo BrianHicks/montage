@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[cynic::schema("montage")]
 mod schema {}
 
@@ -14,7 +16,7 @@ pub struct ReportQuery {
     pub report: Report,
 }
 
-#[derive(cynic::QueryFragment, Debug)]
+#[derive(cynic::QueryFragment, Debug, Serialize)]
 pub struct Report {
     pub start: DateTime,
     pub end: DateTime,
@@ -22,14 +24,14 @@ pub struct Report {
     pub sessions: Vec<Session>,
 }
 
-#[derive(cynic::QueryFragment, Debug)]
+#[derive(cynic::QueryFragment, Debug, Serialize)]
 pub struct Totals {
     pub short_break: Duration,
     pub long_break: Duration,
     pub task: Duration,
 }
 
-#[derive(cynic::QueryFragment, Debug)]
+#[derive(cynic::QueryFragment, Debug, Serialize)]
 pub struct Session {
     pub description: String,
     pub actual_duration: Duration,

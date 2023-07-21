@@ -1513,6 +1513,7 @@ dependencies = [
  "cynic-codegen",
  "insta",
  "iso8601",
+ "serde",
 ]
 
 [[package]]
