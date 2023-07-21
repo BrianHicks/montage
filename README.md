@@ -43,7 +43,11 @@ There's a OmniFocus plugin here, at `Montage.omnifocusjs`. Point OmniFocus at it
 
 ### Report
 
-`montage report --day` will give you a report for the day's work. ASCII! It'll also tell you how much time was spent on tasks, short breaks (less than 30 minutes) and long breaks (more than 30 minutes.)
+`montage report` will give you a report for the day's work in Markdown, suitable for copying to a journal or log. It'll also tell you how much time was spent on tasks and short breaks (less than 15 minutes.) You can get a summary of longer breaks if you want it by passing `--include-long-breaks-in-summary`, but that doesn't tend to be super helpful information for me so I turn it off by default.
+
+You can also call it like `montage report FIRST_DATE SECOND_DATE` to get a report for all the sessions in those two dates, inclusive.
+
+In either case, you can pass `--no-log` or `--no-task-totals` to turn off those sections of the report.
 
 ## License
 
