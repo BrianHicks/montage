@@ -142,6 +142,7 @@ impl Opts {
                 from: naive_from,
                 to: naive_to,
                 client,
+                no_sessions,
             } => {
                 let from = naive_from
                     .and_then(|date| date.and_hms_opt(0, 0, 0))
@@ -188,9 +189,14 @@ impl Opts {
                 struct Context {
                     report: Report,
                     date_range: String,
+                    include_sessions: bool,
                 }
 
-                let context = Context { report, date_range };
+                let context = Context {
+                    report,
+                    date_range,
+                    include_sessions: !no_sessions,
+                };
 
                 let mut handlebars = Handlebars::new();
 
@@ -235,7 +241,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "report",
-                    "## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}",
+                    "## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}{{#if include_sessions}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}",
                 )?;
 
                 handlebars.register_template_string(
@@ -461,6 +467,10 @@ enum Command {
         /// The ending date. If omitted, you'll just get a report for the starting date. Assumed
         /// to be in the local time zone.
         to: Option<NaiveDate>,
+
+        /// If set, doesn't include the list of sessions.
+        #[clap(long)]
+        no_sessions: bool,
 
         #[command(flatten)]
         client: GraphQLClient,
