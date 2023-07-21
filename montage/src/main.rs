@@ -4,7 +4,7 @@ mod vexer;
 
 use crate::graphql_client::GraphQLClient;
 use crate::tokio_spawner::TokioSpawner;
-use chrono::{DateTime, Duration, Local};
+use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, TimeZone};
 use clap::Parser;
 use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
@@ -134,6 +134,43 @@ impl Opts {
                 } else {
                     bail!("got neither --by nor --to. This should not happen!");
                 };
+            }
+            Command::Report {
+                from: naive_from,
+                to: naive_to,
+                client,
+            } => {
+                let from = naive_from
+                    .and_then(|date| date.and_hms_opt(0, 0, 0))
+                    .and_then(|date| date.and_local_timezone(Local).into())
+                    .unwrap_or_else(|| {
+                        let now = Local::now();
+
+                        now.timezone()
+                            .with_ymd_and_hms(now.year(), now.month(), now.day(), 0, 0, 0)
+                    })
+                    .unwrap();
+
+                let to = naive_to
+                    .and_then(|date| date.and_hms_opt(0, 0, 0))
+                    .map(|date| date.and_local_timezone(Local).unwrap())
+                    .unwrap_or(from);
+
+                let query = montage_client::report::ReportQuery::build(
+                    montage_client::report::ReportQueryVariables {
+                        start: from,
+                        end: to,
+                    },
+                );
+
+                let report = client
+                    .make_graphql_request(query)
+                    .await?
+                    .data
+                    .ok_or(eyre!("data was null"))?
+                    .report;
+
+                println!("{report:#?}");
             }
             Command::Watch(client) => {
                 let query = CurrentSessionUpdates::build(());
@@ -328,6 +365,19 @@ enum Command {
 
         #[arg(long, conflicts_with = "by", required_unless_present = "by")]
         to: Option<DateTime<Local>>,
+
+        #[command(flatten)]
+        client: GraphQLClient,
+    },
+
+    /// Report on the sessions specified in the current days (inclusive).
+    Report {
+        /// The starting date. If omitted, uses today's date. Assumed to be in the local time zone.
+        from: Option<NaiveDate>,
+
+        /// The ending date. If omitted, you'll just get a report for the starting date. Assumed
+        /// to be in the local time zone.
+        to: Option<NaiveDate>,
 
         #[command(flatten)]
         client: GraphQLClient,
