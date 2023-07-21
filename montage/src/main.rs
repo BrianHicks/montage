@@ -141,8 +141,9 @@ impl Opts {
             Command::Report {
                 from: naive_from,
                 to: naive_to,
-                client,
                 no_sessions,
+                template,
+                client,
             } => {
                 let from = naive_from
                     .and_then(|date| date.and_hms_opt(0, 0, 0))
@@ -239,9 +240,14 @@ impl Opts {
                 );
                 handlebars.register_helper("time", Box::new(time));
 
-                handlebars.register_template_string(
+                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}{{#if include_sessions}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
+
+                handlebars.register_template_string::<String>(
                     "report",
-                    "## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}{{#if include_sessions}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}",
+                    match &template {
+                        Some(t) => t.to_string(),
+                        None => default_template,
+                    },
                 )?;
 
                 handlebars.register_template_string(
@@ -471,6 +477,13 @@ enum Command {
         /// If set, doesn't include the list of sessions.
         #[clap(long)]
         no_sessions: bool,
+
+        /// The Handlebars template to use for rendering the report.
+        ///
+        /// There are helpers and sub-templates available, but you'll have to look through the
+        /// program source to get them for now!
+        #[clap(long)]
+        template: Option<String>,
 
         #[command(flatten)]
         client: GraphQLClient,
