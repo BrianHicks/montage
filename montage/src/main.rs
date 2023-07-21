@@ -142,6 +142,7 @@ impl Opts {
                 from: naive_from,
                 to: naive_to,
                 no_log,
+                no_task_totals,
                 template,
                 client,
             } => {
@@ -191,12 +192,14 @@ impl Opts {
                     report: Report,
                     date_range: String,
                     include_sessions: bool,
+                    include_task_totals: bool,
                 }
 
                 let context = Context {
                     report,
                     date_range,
                     include_sessions: !no_log,
+                    include_task_totals: !no_task_totals,
                 };
 
                 let mut handlebars = Handlebars::new();
@@ -240,7 +243,7 @@ impl Opts {
                 );
                 handlebars.register_helper("time", Box::new(time));
 
-                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}{{#if include_sessions}}\n\n### Log\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
+                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n{{#if include_task_totals}}\n\n### Task Totals\n\n{{#each report.totals.tasks_by_description}}- {{>total_by_description}}\n{{/each}}{{/if}}{{#if include_sessions}}\n### Log\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
 
                 handlebars.register_template_string::<String>(
                     "report",
@@ -263,6 +266,11 @@ impl Opts {
                 handlebars.register_template_string(
                     "session",
                     "**{{kind}} at {{time start_time}}** {{description}} for {{hms actual_duration}}",
+                )?;
+
+                handlebars.register_template_string(
+                    "total_by_description",
+                    "**{{hms total}}** {{description}}",
                 )?;
 
                 println!("{}", handlebars.render("report", &context)?);
@@ -474,9 +482,13 @@ enum Command {
         /// to be in the local time zone.
         to: Option<NaiveDate>,
 
-        /// If set, doesn't include the list of sessions by time.
+        /// If passed, don't include the list of sessions by time.
         #[clap(long)]
         no_log: bool,
+
+        /// If passed, don't include the total time on each task.
+        #[clap(long)]
+        no_task_totals: bool,
 
         /// The Handlebars template to use for rendering the report.
         ///
