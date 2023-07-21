@@ -143,6 +143,7 @@ impl Opts {
                 to: naive_to,
                 no_log,
                 no_task_totals,
+                include_long_breaks_in_summary,
                 template,
                 client,
             } => {
@@ -193,6 +194,7 @@ impl Opts {
                     date_range: String,
                     include_sessions: bool,
                     include_task_totals: bool,
+                    include_long_breaks_in_summary: bool,
                 }
 
                 let context = Context {
@@ -200,6 +202,7 @@ impl Opts {
                     date_range,
                     include_sessions: !no_log,
                     include_task_totals: !no_task_totals,
+                    include_long_breaks_in_summary: *include_long_breaks_in_summary,
                 };
 
                 let mut handlebars = Handlebars::new();
@@ -260,7 +263,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "totals",
-                    "**{{hms task}}** time spent on tasks, **{{hms short_break}}** on short breaks, and **{{hms long_break}}** on long breaks."
+                    "**{{hms task}}** time spent on tasks{{#if include_long_breaks_in_summary}}, {{else}} and {{/if}}**{{hms short_break}}** on short breaks{{#if include_long_breaks_in_summary}}, and **{{hms long_break}}** on long breaks{{/if}}."
                 )?;
 
                 handlebars.register_template_string(
@@ -489,6 +492,11 @@ enum Command {
         /// If passed, don't include the total time on each task.
         #[clap(long)]
         no_task_totals: bool,
+
+        /// Include long breaks. These are typically just times to get the vexer off my back
+        /// (lunch, overnight, etc.) so they aren't that interesting to include in a report.
+        #[clap(long)]
+        include_long_breaks_in_summary: bool,
 
         /// The Handlebars template to use for rendering the report.
         ///
