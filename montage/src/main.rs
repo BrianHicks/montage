@@ -11,9 +11,11 @@ use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
+use handlebars::{handlebars_helper, Handlebars};
 use montage_client::current_session_updates::CurrentSessionUpdates;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -170,7 +172,32 @@ impl Opts {
                     .ok_or(eyre!("data was null"))?
                     .report;
 
-                println!("{report:#?}");
+                let mut handlebars = Handlebars::new();
+
+                handlebars.register_template_string(
+                    "report",
+                    "## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}",
+                )?;
+
+                handlebars.register_template_string(
+                    "date_range",
+                    "{{len report.sessions}} sessions from {{report.start}} to {{report.end}}",
+                )?;
+
+                handlebars.register_template_string(
+                    "totals",
+                    "**{{task}}** time spent on tasks, **{{short_break}}** on short breaks, and **{{long_break}}** on long breaks"
+                )?;
+
+                handlebars.register_template_string(
+                    "session",
+                    "**{{kind}} at {{start_time}}** {{description}} for {{actual_duration}}",
+                )?;
+
+                let mut data = BTreeMap::new();
+                data.insert("report", report);
+
+                println!("{}", handlebars.render("report", &data)?);
             }
             Command::Watch(client) => {
                 let query = CurrentSessionUpdates::build(());

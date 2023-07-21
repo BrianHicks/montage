@@ -1492,6 +1492,7 @@ dependencies = [
  "directories",
  "futures",
  "graphql-ws-client",
+ "handlebars",
  "iso8601",
  "montage_client",
  "montage_server",
