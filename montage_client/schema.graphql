@@ -129,7 +129,7 @@ type Subscription {
 """
 Totals for each kind of session. If sessions started on one day and ended another, and the
 start or end date would cut part of that time off, we only count to or from midnight in the
-local time zone.
+local time zone. Incomplete sessions are included in these totals!
 """
 type Totals {
 	"""
