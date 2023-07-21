@@ -206,6 +206,7 @@ impl Opts {
                 };
 
                 let mut handlebars = Handlebars::new();
+                handlebars.register_escape_fn(handlebars::no_escape);
 
                 handlebars_helper!(
                     hms: |duration_str: String| {
