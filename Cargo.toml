@@ -1,6 +1,7 @@
 [workspace]
 members = [
-  "montage_server"
+  "montage_server",
+  "montage_client",
 ]
 
 # [dependencies]

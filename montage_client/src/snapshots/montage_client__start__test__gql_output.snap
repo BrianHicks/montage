@@ -1,5 +1,5 @@
 ---
-source: src/client/start.rs
+source: montage_client/src/start.rs
 expression: operation.query
 ---
 mutation StartMutation($description: String!, $kind: Kind!, $duration: Duration) {

@@ -1,5 +1,5 @@
 ---
-source: src/client/current_session.rs
+source: montage_client/src/current_session.rs
 expression: operation.query
 ---
 query CurrentSessionQuery {

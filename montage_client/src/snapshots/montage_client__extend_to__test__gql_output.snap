@@ -1,5 +1,5 @@
 ---
-source: src/client/extend_to.rs
+source: montage_client/src/extend_to.rs
 expression: operation.query
 ---
 mutation ExtendToMutation($target: DateTime!) {

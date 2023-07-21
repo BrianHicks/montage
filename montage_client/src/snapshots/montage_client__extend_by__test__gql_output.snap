@@ -1,5 +1,5 @@
 ---
-source: src/client/extend_by.rs
+source: montage_client/src/extend_by.rs
 expression: operation.query
 ---
 mutation ExtendByMutation($duration: Duration!) {
