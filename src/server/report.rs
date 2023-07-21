@@ -60,6 +60,16 @@ fn at_midnight<TZ: chrono::TimeZone>(date: DateTime<TZ>) -> DateTime<TZ> {
     }
 }
 
+fn at_one_second_to_midnight<TZ: chrono::TimeZone>(date: DateTime<TZ>) -> DateTime<TZ> {
+    if date.num_seconds_from_midnight() == 86399 {
+        date
+    } else {
+        date.timezone()
+            .with_ymd_and_hms(date.year(), date.month(), date.day(), 23, 59, 59)
+            .unwrap()
+    }
+}
+
 /// Totals for each kind of session. If sessions started on one day and ended another, and the
 /// start or end date would cut part of that time off, we only count to or from midnight in the
 /// local time zone. Incomplete sessions are included in these totals!
@@ -94,7 +104,7 @@ impl Totals {
         let mut totals = Self::default();
 
         let start_date = at_midnight(start);
-        let end_date = at_midnight(end);
+        let end_date = at_one_second_to_midnight(end);
 
         for session in sessions.iter() {
             let session_total_within_dates = session.total_time_within_dates(start_date, end_date);
