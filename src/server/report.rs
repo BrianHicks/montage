@@ -98,6 +98,7 @@ impl Totals {
 
         for session in sessions.iter() {
             let session_total_within_dates = session.total_time_within_dates(start_date, end_date);
+            debug_assert!(session_total_within_dates >= Duration::zero());
 
             match session.kind {
                 Kind::Task => totals.task = totals.task + session_total_within_dates,
@@ -111,6 +112,10 @@ impl Totals {
                 },
             };
         }
+
+        debug_assert!(totals.short_break > Duration::zero());
+        debug_assert!(totals.long_break > Duration::zero());
+        debug_assert!(totals.task > Duration::zero());
 
         totals
     }

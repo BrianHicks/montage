@@ -233,10 +233,20 @@ impl Session {
         start: DateTime<Local>,
         end: DateTime<Local>,
     ) -> Duration {
-        let start = std::cmp::max(start, self.start_time);
-        let end = std::cmp::min(end, self.end_time.unwrap_or_else(|| Local::now()));
+        debug_assert!(
+            end > start,
+            "start should always come before end in arguments. Start was {start}, end was {end}"
+        );
 
-        end - start
+        let start_final = std::cmp::max(start, self.start_time);
+        let end_final = std::cmp::min(end, self.end_time.unwrap_or_else(|| Local::now()));
+
+        debug_assert!(
+            end_final >= start_final,
+            "start should always come before end after comparison. Start was {start_final}, end was {end_final}"
+        );
+
+        end_final - start_final
     }
 
     pub fn get_actual_duration(&self) -> Duration {
