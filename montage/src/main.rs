@@ -141,7 +141,7 @@ impl Opts {
             Command::Report {
                 from: naive_from,
                 to: naive_to,
-                no_sessions,
+                no_log,
                 template,
                 client,
             } => {
@@ -196,7 +196,7 @@ impl Opts {
                 let context = Context {
                     report,
                     date_range,
-                    include_sessions: !no_sessions,
+                    include_sessions: !no_log,
                 };
 
                 let mut handlebars = Handlebars::new();
@@ -474,9 +474,9 @@ enum Command {
         /// to be in the local time zone.
         to: Option<NaiveDate>,
 
-        /// If set, doesn't include the list of sessions.
+        /// If set, doesn't include the list of sessions by time.
         #[clap(long)]
-        no_sessions: bool,
+        no_log: bool,
 
         /// The Handlebars template to use for rendering the report.
         ///
