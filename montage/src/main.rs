@@ -267,7 +267,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "totals",
-                    "**{{hms task}}** time spent on tasks{{#if include_long_breaks_in_summary}}, {{else}} and {{/if}}**{{hms short_break}}** on short breaks{{#if include_long_breaks_in_summary}}, and **{{hms long_break}}** on long breaks{{/if}}."
+                    "**{{hms task}}** time spent on tasks and **{{hms short_break}}** on short breaks for a total of **{{hms short_break_and_task}}**{{#if include_long_breaks_in_summary}}, plus  **{{hms long_break}}** on long breaks{{/if}}."
                 )?;
 
                 handlebars.register_template_string(
