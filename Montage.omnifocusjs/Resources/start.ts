@@ -24,11 +24,11 @@
         new Form.Field.String(
           "description",
           "Description",
-          suggestedDescription
-        )
+          suggestedDescription,
+        ),
       );
       focusForm.addField(
-        new Form.Field.String("minutes", "Minutes", suggestedMinutes)
+        new Form.Field.String("minutes", "Minutes", suggestedMinutes),
       );
 
       await focusForm.show("Start a session", "Start");
@@ -81,8 +81,8 @@
       new Alert(
         "Started session",
         `Started task for ${Math.round(
-          minutes / 60
-        )} minutes, until ${endTime.getHours()}:${endTime.getMinutes()}`
+          minutes / 60,
+        )} minutes, until ${endTime.getHours()}:${endTime.getMinutes()}`,
       ).show();
     } catch (err) {
       console.error(err);
