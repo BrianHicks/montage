@@ -75,6 +75,7 @@ fn at_one_second_to_midnight<TZ: chrono::TimeZone>(date: DateTime<TZ>) -> DateTi
 /// start or end date would cut part of that time off, we only count to or from midnight in the
 /// local time zone. Incomplete sessions are included in these totals!
 #[derive(SimpleObject, Debug, PartialEq, Eq)]
+#[graphql(complex)]
 pub struct Totals {
     /// The total time spent in short breaks (that is, those 15 minutes or less)
     pub short_break: Duration,
@@ -95,6 +96,14 @@ pub struct Totals {
 pub struct TotalByDescription {
     description: String,
     total: Duration,
+}
+
+#[ComplexObject]
+impl Totals {
+    /// The total of short breaks plus tasks
+    async fn short_break_and_task(&self) -> Duration {
+        self.short_break + self.task
+    }
 }
 
 impl Default for Totals {
