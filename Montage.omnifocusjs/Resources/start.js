@@ -11,7 +11,7 @@
                 }
                 suggestedDescription = task.name;
             }
-            else if (selection.tags) {
+            else if (selection.tags[0]) {
                 suggestedDescription = selection.tags[0].name;
             }
             else if (selection.projects[0]) {
