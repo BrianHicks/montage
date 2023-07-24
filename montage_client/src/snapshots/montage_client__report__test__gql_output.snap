@@ -10,6 +10,7 @@ query ReportQuery($start: DateTime!, $end: DateTime!) {
       shortBreak
       longBreak
       task
+      shortBreakAndTask
       tasksByDescription {
         description
         total
