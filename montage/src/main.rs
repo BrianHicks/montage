@@ -41,11 +41,16 @@ impl Opts {
                 duration,
                 until,
                 client,
+                meeting,
             } => {
                 let query = montage_client::start::StartMutation::build(
                     montage_client::start::StartMutationVariables {
                         description,
-                        kind: montage_client::start::Kind::Task,
+                        kind: if *meeting {
+                            montage_client::start::Kind::Meeting
+                        } else {
+                            montage_client::start::Kind::Task
+                        },
                         duration: Self::duration_from_options(duration, until)?,
                     },
                 );
@@ -445,6 +450,10 @@ enum Command {
         /// Work on a task until a specific time
         #[arg(long, conflicts_with = "duration")]
         until: Option<DateTime<Local>>,
+
+        /// Is this task a meeting?
+        #[arg(long)]
+        meeting: bool,
 
         #[command(flatten)]
         client: GraphQLClient,
