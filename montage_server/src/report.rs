@@ -88,6 +88,9 @@ pub struct Totals {
 
     /// Total time spent on tasks, broken down by task name
     pub tasks_by_description: Vec<TotalByDescription>,
+
+    /// Total time spent in meetings
+    meeting: Duration,
 }
 
 /// A description (of a task or break) and the total time spent on it during the report's time
@@ -113,6 +116,7 @@ impl Default for Totals {
             long_break: Duration::zero(),
             task: Duration::zero(),
             tasks_by_description: Vec::new(),
+            meeting: Duration::zero(),
         }
     }
 }
@@ -149,6 +153,7 @@ impl Totals {
                         totals.long_break = totals.long_break + session_total_within_dates
                     }
                 },
+                Kind::Meeting => totals.meeting = totals.meeting + session_total_within_dates,
             };
         }
 
@@ -206,7 +211,8 @@ mod test {
                 tasks_by_description: vec![TotalByDescription {
                     description: String::from("description"),
                     total: Duration::minutes(10),
-                },],
+                }],
+                meeting: Duration::zero(),
             }
         )
     }
@@ -231,6 +237,7 @@ mod test {
                 long_break: Duration::zero(),
                 task: Duration::zero(),
                 tasks_by_description: Vec::new(),
+                meeting: Duration::zero(),
             }
         )
     }
@@ -255,6 +262,32 @@ mod test {
                 long_break: Duration::hours(2),
                 task: Duration::zero(),
                 tasks_by_description: Vec::new(),
+                meeting: Duration::zero(),
+            }
+        )
+    }
+
+    #[test]
+    fn adds_meetings() {
+        let now = Local::now();
+
+        let totals = Totals::from_sessions(
+            &vec![
+                session(Kind::Meeting, now, Duration::hours(1), true),
+                session(Kind::Meeting, now, Duration::hours(1), true),
+            ],
+            now - Duration::days(1),
+            now + Duration::days(1),
+        );
+
+        assert_eq!(
+            totals,
+            Totals {
+                short_break: Duration::zero(),
+                long_break: Duration::zero(),
+                task: Duration::zero(),
+                tasks_by_description: Vec::new(),
+                meeting: Duration::hours(2),
             }
         )
     }
@@ -281,6 +314,7 @@ mod test {
                 long_break: Duration::hours(8),
                 task: Duration::zero(),
                 tasks_by_description: Vec::new(),
+                meeting: Duration::zero(),
             }
         )
     }

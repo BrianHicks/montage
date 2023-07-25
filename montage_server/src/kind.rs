@@ -10,6 +10,9 @@ pub enum Kind {
 
     /// A recovery session
     Break,
+
+    /// A session where you're in a meeting (helpful for reporting and for silencing the vexer.)
+    Meeting,
 }
 
 impl Kind {
@@ -17,6 +20,7 @@ impl Kind {
         match self {
             Self::Task => Duration::minutes(25),
             Self::Break => Duration::minutes(5),
+            Self::Meeting => Duration::minutes(60),
         }
     }
 }
