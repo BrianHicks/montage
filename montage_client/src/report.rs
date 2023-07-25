@@ -31,6 +31,7 @@ pub struct Totals {
     pub task: Duration,
     pub short_break_and_task: Duration,
     pub tasks_by_description: Vec<TotalByDescription>,
+    pub meeting: Duration,
 }
 
 #[derive(cynic::QueryFragment, Debug, Serialize)]

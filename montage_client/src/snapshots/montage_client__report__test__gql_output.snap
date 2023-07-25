@@ -15,6 +15,7 @@ query ReportQuery($start: DateTime!, $end: DateTime!) {
         description
         total
       }
+      meeting
     }
     sessions {
       description
