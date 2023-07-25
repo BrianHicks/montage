@@ -10,12 +10,12 @@ query ReportQuery($start: DateTime!, $end: DateTime!) {
       shortBreak
       longBreak
       task
-      shortBreakAndTask
+      meeting
+      working
       tasksByDescription {
         description
         total
       }
-      meeting
     }
     sessions {
       description
