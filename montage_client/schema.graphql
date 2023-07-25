@@ -166,9 +166,9 @@ type Totals {
 	"""
 	meeting: Duration!
 	"""
-	The total of short breaks plus tasks
+	The total spent "working"—that is, on tasks, meetings, and short breaks
 	"""
-	shortBreakAndTask: Duration!
+	working: Duration!
 }
 
 schema {
