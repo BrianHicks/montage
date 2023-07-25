@@ -22,6 +22,7 @@ pub struct Session {
 pub enum Kind {
     Task,
     Break,
+    Meeting,
 }
 
 type DateTime = chrono::DateTime<chrono::Local>;
