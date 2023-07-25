@@ -17,7 +17,13 @@ pub struct Session {
     pub remaining_time: Option<Duration>,
 }
 
-#[derive(cynic::Enum, Clone, Copy, Debug)]
+impl Session {
+    pub fn is_meeting(&self) -> bool {
+        self.kind == Kind::Meeting
+    }
+}
+
+#[derive(cynic::Enum, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
     Task,
     Break,

@@ -91,17 +91,19 @@ impl State {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
-                let what_to_say = THINGS_TO_SAY
-                    .choose(&mut self.rng)
-                    .expect("THINGS_TO_SAY should always have at least one item");
+                if !session.is_meeting() {
+                    let what_to_say = THINGS_TO_SAY
+                        .choose(&mut self.rng)
+                        .expect("THINGS_TO_SAY should always have at least one item");
 
-                let status = Command::new("say")
-                    .arg(what_to_say)
-                    .status()
-                    .wrap_err("failed to run `say`")?;
+                    let status = Command::new("say")
+                        .arg(what_to_say)
+                        .status()
+                        .wrap_err("failed to run `say`")?;
 
-                if !status.success() {
-                    bail!("`say` failed with status {}", status)
+                    if !status.success() {
+                        bail!("`say` failed with status {}", status)
+                    }
                 }
             }
         }
