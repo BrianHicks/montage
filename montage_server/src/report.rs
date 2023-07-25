@@ -103,9 +103,9 @@ pub struct TotalByDescription {
 
 #[ComplexObject]
 impl Totals {
-    /// The total of short breaks plus tasks
-    async fn short_break_and_task(&self) -> Duration {
-        self.short_break + self.task
+    /// The total spent "working"—that is, on tasks, meetings, and short breaks
+    async fn working(&self) -> Duration {
+        self.short_break + self.task + self.meeting
     }
 }
 
