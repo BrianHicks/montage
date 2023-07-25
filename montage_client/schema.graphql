@@ -29,6 +29,10 @@ enum Kind {
 	A recovery session
 	"""
 	BREAK
+	"""
+	A session where you're in a meeting (helpful for reporting and for silencing the vexer.)
+	"""
+	MEETING
 }
 
 type Mutation {
@@ -157,6 +161,10 @@ type Totals {
 	Total time spent on tasks, broken down by task name
 	"""
 	tasksByDescription: [TotalByDescription!]!
+	"""
+	Total time spent in meetings
+	"""
+	meeting: Duration!
 	"""
 	The total of short breaks plus tasks
 	"""
