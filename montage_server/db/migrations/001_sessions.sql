@@ -1,6 +1,6 @@
 CREATE TABLE sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    kind TEXT NOT NULL CHECK(kind IN ('task', 'break')),
+    kind TEXT NOT NULL,
     description TEXT NOT NULL,
     start_time DATETIME NOT NULL,
     duration STRING NOT NULL,
