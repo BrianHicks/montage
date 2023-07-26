@@ -272,7 +272,7 @@ impl Opts {
 
                 handlebars.register_template_string(
                     "totals",
-                    "**{{hms task}}** spent on tasks, **{{hms meeting}}** in meeetings, and **{{hms short_break}}** on short breaks for a total of **{{hms working}}**{{#if include_long_breaks_in_summary}} In addition, you tracked **{{hms long_break}}** on long breaks{{/if}}."
+                    "**{{hms task}}** spent on tasks, **{{hms meeting}}** in meetings, and **{{hms short_break}}** on short breaks for a total of **{{hms working}}**{{#if include_long_breaks_in_summary}} In addition, you tracked **{{hms long_break}}** on long breaks{{/if}}."
                 )?;
 
                 handlebars.register_template_string(
