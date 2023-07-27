@@ -62,7 +62,9 @@ impl Vexer {
                         None => break,
                     }
                 },
-                _ = interval.tick() => state.tick()?,
+                _ = interval.tick() => if let Err(err) = state.tick() {
+                    tracing::error!(err=?err, "error in time tick");
+                },
             }
         }
 
