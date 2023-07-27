@@ -56,7 +56,9 @@ impl Vexer {
                             );
                             state.got_new_session(session_opt);
                         },
-                        Some(Err(err)) => return Err(err).wrap_err("error getting next session"),
+                        Some(Err(err)) => {
+                            tracing::error!(err=?err, "error getting next sesson");
+                        }
                         None => break,
                     }
                 },
