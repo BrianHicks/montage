@@ -59,7 +59,10 @@ impl Vexer {
                         Some(Err(err)) => {
                             tracing::error!(err=?err, "error getting next sesson");
                         }
-                        None => break,
+                        None => {
+                            tracing::info!("disconnected from websocket stream");
+                            break
+                        },
                     }
                 },
                 _ = interval.tick() => if let Err(err) = state.tick() {
