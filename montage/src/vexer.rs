@@ -24,14 +24,26 @@ pub struct VexerConfig {
 
 impl VexerConfig {
     pub async fn run(&self) -> Result<()> {
-        let mut state = Vexer::default();
+        let mut vexer = Vexer::default();
+        vexer.run(self).await
+    }
+}
+
+#[derive(Debug)]
+struct Vexer {
+    session: Option<montage_client::current_session_updates::Session>,
+    rng: ThreadRng,
+}
+
+impl Vexer {
+    async fn run(&mut self, config: &VexerConfig) -> Result<()> {
         let mut interval =
-            tokio::time::interval(tokio::time::Duration::from_secs(self.remind_interval));
+            tokio::time::interval(tokio::time::Duration::from_secs(config.remind_interval));
 
         let query = CurrentSessionUpdates::build(());
-        let (connection, _) = async_tungstenite::tokio::connect_async(self.client.request()?)
+        let (connection, _) = async_tungstenite::tokio::connect_async(config.client.request()?)
             .await
-            .wrap_err_with(|| format!("could not connect to `{}`", self.client.ws_endpoint()))?;
+            .wrap_err_with(|| format!("could not connect to `{}`", config.client.ws_endpoint()))?;
 
         let (sink, stream) = connection.split();
         let mut client = CynicClientBuilder::new()
@@ -54,7 +66,7 @@ impl VexerConfig {
                                 session=?session_opt,
                                 "got a new session"
                             );
-                            state.got_new_session(session_opt);
+                            self.got_new_session(session_opt);
                         },
                         Some(Err(err)) => {
                             tracing::error!(err=?err, "error getting next sesson");
@@ -65,7 +77,7 @@ impl VexerConfig {
                         },
                     }
                 },
-                _ = interval.tick() => if let Err(err) = state.tick() {
+                _ = interval.tick() => if let Err(err) = self.tick() {
                     tracing::error!(err=?err, "error in time tick");
                 },
             }
@@ -75,15 +87,7 @@ impl VexerConfig {
 
         Ok(())
     }
-}
 
-#[derive(Debug)]
-struct Vexer {
-    session: Option<montage_client::current_session_updates::Session>,
-    rng: ThreadRng,
-}
-
-impl Vexer {
     fn got_new_session(
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
