@@ -13,7 +13,7 @@ use tokio::select;
 static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
 #[derive(Parser, Debug)]
-pub struct Vexer {
+pub struct VexerConfig {
     /// How often to say things once the session is over (seconds)
     #[arg(long, default_value = "2")]
     remind_interval: u64,
@@ -22,9 +22,9 @@ pub struct Vexer {
     client: crate::graphql_client::GraphQLClientOptions,
 }
 
-impl Vexer {
+impl VexerConfig {
     pub async fn run(&self) -> Result<()> {
-        let mut state = State::default();
+        let mut state = Vexer::default();
         let mut interval =
             tokio::time::interval(tokio::time::Duration::from_secs(self.remind_interval));
 
@@ -78,12 +78,12 @@ impl Vexer {
 }
 
 #[derive(Debug)]
-struct State {
+struct Vexer {
     session: Option<montage_client::current_session_updates::Session>,
     rng: ThreadRng,
 }
 
-impl State {
+impl Vexer {
     fn got_new_session(
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
@@ -119,7 +119,7 @@ impl State {
     }
 }
 
-impl Default for State {
+impl Default for Vexer {
     fn default() -> Self {
         Self {
             session: None,

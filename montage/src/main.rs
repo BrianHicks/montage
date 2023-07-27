@@ -529,7 +529,7 @@ enum Command {
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
-    Vex(crate::vexer::Vexer),
+    Vex(crate::vexer::VexerConfig),
 
     /// Start the server, which enables the rest of the features!
     Serve {
