@@ -12,6 +12,8 @@ use tokio::select;
 
 static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
 
+static MAXIMUM_BACKOFF: std::time::Duration = std::time::Duration::from_secs(30);
+
 #[derive(Parser, Debug)]
 pub struct VexerConfig {
     /// How often to say things once the session is over (seconds)
@@ -33,6 +35,7 @@ impl VexerConfig {
 struct Vexer {
     session: Option<montage_client::current_session_updates::Session>,
     rng: ThreadRng,
+    backoff: std::time::Duration,
 }
 
 impl Vexer {
@@ -40,52 +43,77 @@ impl Vexer {
         let mut interval =
             tokio::time::interval(tokio::time::Duration::from_secs(config.remind_interval));
 
-        let query = CurrentSessionUpdates::build(());
-        let (connection, _) = async_tungstenite::tokio::connect_async(config.client.request()?)
-            .await
-            .wrap_err_with(|| format!("could not connect to `{}`", config.client.ws_endpoint()))?;
-
-        let (sink, stream) = connection.split();
-        let mut client = CynicClientBuilder::new()
-            .build(stream, sink, TokioSpawner::current())
-            .await
-            .wrap_err("could not construct a Cynic client")?;
-
-        let mut sessions_stream = client
-            .streaming_operation(query)
-            .await
-            .wrap_err("could not start streaming")?;
-
         loop {
-            select! {
-                new_session_resp_opt = sessions_stream.next() => {
-                    match new_session_resp_opt {
-                        Some(Ok(new_session_resp)) => {
-                            let session_opt = new_session_resp.data.and_then(|r| r.current_session);
-                            tracing::info!(
-                                session=?session_opt,
-                                "got a new session"
-                            );
-                            self.got_new_session(session_opt);
-                        },
-                        Some(Err(err)) => {
-                            tracing::error!(err=?err, "error getting next sesson");
-                        }
-                        None => {
-                            tracing::info!("disconnected from websocket stream");
-                            break
-                        },
+            tokio::time::sleep(self.backoff).await;
+
+            let (connection, _) =
+                match async_tungstenite::tokio::connect_async(config.client.request()?).await {
+                    Ok(conn) => conn,
+                    Err(err) => {
+                        tracing::error!(err = err.to_string(), "could not connect");
+                        self.increment_backoff();
+                        continue;
                     }
-                },
-                _ = interval.tick() => if let Err(err) = self.tick() {
-                    tracing::error!(err=?err, "error in time tick");
-                },
+                };
+
+            let (sink, stream) = connection.split();
+            let mut client = CynicClientBuilder::new()
+                .build(stream, sink, TokioSpawner::current())
+                .await
+                .wrap_err("could not construct a Cynic client")?;
+
+            let query = CurrentSessionUpdates::build(());
+            let mut sessions_stream = client
+                .streaming_operation(query)
+                .await
+                .wrap_err("could not start streaming")?;
+
+            self.successfully_connected();
+
+            loop {
+                select! {
+                    new_session_resp_opt = sessions_stream.next() => {
+                        match new_session_resp_opt {
+                            Some(Ok(new_session_resp)) => {
+                                let session_opt = new_session_resp.data.and_then(|r| r.current_session);
+                                tracing::info!(
+                                    session=?session_opt,
+                                    "got a new session"
+                                );
+                                self.got_new_session(session_opt);
+                            },
+                            Some(Err(err)) => {
+                                tracing::error!(err=?err, "error getting next sesson");
+                            }
+                            None => {
+                                tracing::info!("disconnected from websocket stream, trying to reconnect");
+                                break
+                            },
+                        }
+                    },
+                    _ = interval.tick() => if let Err(err) = self.tick() {
+                        tracing::error!(err=?err, "error in time tick");
+                    },
+                }
             }
         }
+    }
 
-        // TODO: disconnect properly
+    fn increment_backoff(&mut self) {
+        if self.backoff.is_zero() {
+            self.backoff = std::time::Duration::from_secs(1);
+        } else {
+            self.backoff *= 2;
+        }
 
-        Ok(())
+        self.backoff = std::cmp::min(self.backoff, MAXIMUM_BACKOFF);
+
+        tracing::info!(backoff = ?self.backoff, "increasing backoff");
+    }
+
+    fn successfully_connected(&mut self) {
+        tracing::info!("successfully connected");
+        self.backoff = std::time::Duration::from_secs(0);
     }
 
     fn got_new_session(
@@ -128,6 +156,7 @@ impl Default for Vexer {
         Self {
             session: None,
             rng: rand::thread_rng(),
+            backoff: std::time::Duration::from_secs(0),
         }
     }
 }
