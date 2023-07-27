@@ -44,6 +44,12 @@ impl Vexer {
             tokio::time::interval(tokio::time::Duration::from_secs(config.remind_interval));
 
         loop {
+            if !self.backoff.is_zero() {
+                tracing::warn!(
+                    seconds = self.backoff.as_secs(),
+                    "encountered errors; backing off"
+                );
+            }
             tokio::time::sleep(self.backoff).await;
 
             let (connection, _) =
@@ -108,7 +114,7 @@ impl Vexer {
 
         self.backoff = std::cmp::min(self.backoff, MAXIMUM_BACKOFF);
 
-        tracing::info!(backoff = ?self.backoff, "increasing backoff");
+        tracing::debug!(backoff = ?self.backoff, "increasing backoff");
     }
 
     fn successfully_connected(&mut self) {
