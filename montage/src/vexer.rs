@@ -19,7 +19,7 @@ pub struct Vexer {
     remind_interval: u64,
 
     #[command(flatten)]
-    client: crate::graphql_client::GraphQLClient,
+    client: crate::graphql_client::GraphQLClientOptions,
 }
 
 impl Vexer {

@@ -2,7 +2,7 @@ mod graphql_client;
 mod tokio_spawner;
 mod vexer;
 
-use crate::graphql_client::GraphQLClient;
+use crate::graphql_client::GraphQLClientOptions;
 use crate::tokio_spawner::TokioSpawner;
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, TimeZone};
 use clap::Parser;
@@ -456,7 +456,7 @@ enum Command {
         meeting: bool,
 
         #[command(flatten)]
-        client: GraphQLClient,
+        client: GraphQLClientOptions,
     },
 
     /// Take a break in between tasks
@@ -474,7 +474,7 @@ enum Command {
         until: Option<DateTime<Local>>,
 
         #[command(flatten)]
-        client: GraphQLClient,
+        client: GraphQLClientOptions,
     },
 
     /// Add some more time onto the current session
@@ -486,7 +486,7 @@ enum Command {
         to: Option<DateTime<Local>>,
 
         #[command(flatten)]
-        client: GraphQLClient,
+        client: GraphQLClientOptions,
     },
 
     /// Report on the sessions specified in the current days (inclusive).
@@ -519,13 +519,13 @@ enum Command {
         template: Option<String>,
 
         #[command(flatten)]
-        client: GraphQLClient,
+        client: GraphQLClientOptions,
     },
 
-    Watch(GraphQLClient),
+    Watch(GraphQLClientOptions),
 
     /// Show an xbar status message
-    Xbar(GraphQLClient),
+    Xbar(GraphQLClientOptions),
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.

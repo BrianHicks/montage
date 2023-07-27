@@ -15,7 +15,7 @@ pub static DEFAULT_ADDR: &str = "127.0.0.1";
 pub static DEFAULT_PORT: &str = "4774";
 
 #[derive(Parser, Debug)]
-pub struct GraphQLClient {
+pub struct GraphQLClientOptions {
     /// The address to bind to
     #[arg(long, default_value = DEFAULT_ADDR, env = "MONTAGE_ADDR")]
     server_addr: std::net::IpAddr,
@@ -25,7 +25,7 @@ pub struct GraphQLClient {
     server_port: u16,
 }
 
-impl GraphQLClient {
+impl GraphQLClientOptions {
     pub fn endpoint(&self) -> String {
         format!("http://{}:{}/graphql", self.server_addr, self.server_port)
     }
