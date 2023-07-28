@@ -3,7 +3,7 @@ use chrono::Duration;
 use color_eyre::eyre::{Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::QueryBuilder;
-use montage_client::current_session::Session;
+use montage_client::current_session::{Kind, Session};
 
 #[derive(Debug, clap::Parser)]
 pub struct XBar {
@@ -52,7 +52,8 @@ impl XBar {
         let minutes = duration.num_minutes();
 
         Ok(format!(
-            "⏰ {} ({}:{:02})",
+            "{} {} ({}:{:02})",
+            Self::emoji(&session),
             Self::escape(&session.description),
             minutes,
             duration.num_seconds() - minutes * 60,
@@ -61,6 +62,15 @@ impl XBar {
 
     fn escape(unescaped: &str) -> String {
         unescaped.replace('|', "\\|")
+    }
+
+    fn emoji(session: &Session) -> String {
+        match session.kind {
+            Kind::Task => "⏰",
+            Kind::Break => "☕️",
+            Kind::Meeting => "🗣",
+        }
+        .to_string()
     }
 }
 
