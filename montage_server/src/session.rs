@@ -281,10 +281,9 @@ mod test {
         let pool = get_pool().await;
         let now = Local::now();
 
-        let new_session =
-            Session::start(&pool, Kind::Task, "foo", now, Duration::minutes(25))
-                .await
-                .unwrap();
+        let new_session = Session::start(&pool, Kind::Task, "foo", now, Duration::minutes(25))
+            .await
+            .unwrap();
         let current_session = Session::current_session(&pool).await.unwrap();
 
         assert_eq!(current_session, Some(new_session));
@@ -300,10 +299,9 @@ mod test {
             .await
             .unwrap();
 
-        let session_2 =
-            Session::start(&pool, Kind::Task, "foo", next, Duration::minutes(25))
-                .await
-                .unwrap();
+        let session_2 = Session::start(&pool, Kind::Task, "foo", next, Duration::minutes(25))
+            .await
+            .unwrap();
 
         let current_session = Session::current_session(&pool).await.unwrap();
 

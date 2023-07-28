@@ -5,12 +5,21 @@ use color_eyre::eyre::{bail, Result, WrapErr};
 use cynic::SubscriptionBuilder;
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
-use montage_client::current_session_updates::CurrentSessionUpdates;
+use montage_client::current_session_updates::{CurrentSessionUpdates, Kind};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use std::process::Command;
 use tokio::select;
 
-static THINGS_TO_SAY: [&str; 4] = ["hey", "pick a new task", "Brian", "time for a break?"];
+static THINGS_TO_SAY_AFTER_TASK: [&str; 4] =
+    ["hey", "Brian", "time for a break?", "need some more time?"];
+
+static THINGS_TO_SAY_AFTER_BREAK: [&str; 5] = [
+    "hey",
+    "Brian",
+    "pick a new task",
+    "ready to go?",
+    "let's do this!",
+];
 
 static MAXIMUM_BACKOFF: std::time::Duration = std::time::Duration::from_secs(30);
 
@@ -136,24 +145,40 @@ impl Vexer {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
-                if !session.is_meeting() {
-                    let what_to_say = THINGS_TO_SAY
-                        .choose(&mut self.rng)
-                        .expect("THINGS_TO_SAY should always have at least one item");
-
-                    let status = Command::new("say")
-                        .arg(what_to_say)
-                        .status()
-                        .wrap_err("failed to run `say`")?;
-
-                    if !status.success() {
-                        bail!("`say` failed with status {}", status)
-                    }
-                }
+                self.annoy()?;
             }
         }
 
         Ok(())
+    }
+
+    fn annoy(&mut self) -> Result<()> {
+        if let Some(session) = &self.session {
+            let what_to_say = match session.kind {
+                Kind::Task => THINGS_TO_SAY_AFTER_TASK
+                    .choose(&mut self.rng)
+                    .expect("THINGS_TO_SAY_AFTER_TASK should always have at least one item"),
+
+                Kind::Break => THINGS_TO_SAY_AFTER_BREAK
+                    .choose(&mut self.rng)
+                    .expect("THINGS_TO_SAY_AFTER_BREAK should always have at least one item"),
+
+                // We don't annoy when meetings end because sometimes they run long and it's
+                // awkward to have the computer start saying silly things on Zoom!
+                Kind::Meeting => return Ok(()),
+            };
+
+            let status = Command::new("say")
+                .arg(what_to_say)
+                .status()
+                .wrap_err("failed to run `say`")?;
+
+            if !status.success() {
+                bail!("`say` failed with status {}", status)
+            }
+        }
+
+        return Ok(());
     }
 }
 
