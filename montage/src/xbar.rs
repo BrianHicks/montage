@@ -44,7 +44,7 @@ impl XBar {
 
                 println!(
                     "⏰ {} ({}:{:02})",
-                    session.description,
+                    Self::escape(&session.description),
                     minutes,
                     duration.num_seconds() - minutes * 60,
                 );
@@ -52,5 +52,9 @@ impl XBar {
         };
 
         Ok(())
+    }
+
+    fn escape(unescaped: &str) -> String {
+        unescaped.replace("|", "\\|")
     }
 }
