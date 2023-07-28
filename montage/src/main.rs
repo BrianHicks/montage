@@ -1,6 +1,7 @@
 mod graphql_client;
 mod tokio_spawner;
 mod vexer;
+mod xbar;
 
 use crate::graphql_client::GraphQLClientOptions;
 use crate::tokio_spawner::TokioSpawner;
@@ -310,42 +311,7 @@ impl Opts {
 
                 // TODO: gracefully drop the connection
             }
-            Command::Xbar(client) => {
-                let http_client = reqwest::Client::new();
-
-                let query = montage_client::current_session::CurrentSessionQuery::build(());
-
-                match http_client.post(client.endpoint()).run_graphql(query).await {
-                    Err(CynicReqwestError::ReqwestError(err)) if err.is_connect() => {
-                        // a message for the xbar status line
-                        eprintln!("⚠️ failed to connect to server");
-
-                        // a message to expand on
-                        return Err(err).wrap_err("GraphQL request failed");
-                    }
-                    Err(err) => return Err(err).wrap_err("GraphQL request failed"),
-                    Ok(resp) => {
-                        let session = resp
-                            .data
-                            .expect("a non-null session")
-                            .current_session
-                            .expect("a current session");
-
-                        let duration = Duration::from_std(std::time::Duration::from(
-                            session.remaining_time.expect("remaining time"),
-                        ))
-                        .wrap_err("could not parse duration")?;
-                        let minutes = duration.num_minutes();
-
-                        println!(
-                            "⏰ {} ({}:{:02})",
-                            session.description,
-                            minutes,
-                            duration.num_seconds() - minutes * 60,
-                        );
-                    }
-                };
-            }
+            Command::Xbar(xbar) => xbar.run().await?,
             Command::Vex(vexer) => vexer.run().await?,
             Command::Serve { addr, port } => {
                 montage_server::serve(self.open_sqlite_database().await?, *addr, *port).await?
@@ -525,7 +491,7 @@ enum Command {
     Watch(GraphQLClientOptions),
 
     /// Show an xbar status message
-    Xbar(GraphQLClientOptions),
+    Xbar(xbar::XBar),
 
     /// Run background tasks, like being annoying when there's not an active task or break
     /// running.
