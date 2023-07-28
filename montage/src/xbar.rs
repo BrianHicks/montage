@@ -63,3 +63,29 @@ impl XBar {
         unescaped.replace("|", "\\|")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Local;
+    use montage_client::current_session::Kind;
+
+    #[test]
+    fn format_escapes_bars_in_description() {
+        let session = Session {
+            description: String::from("A | B | C"),
+
+            // none of the rest of these are coherent. Don't worry about it.
+            duration: iso8601::duration("PT5M").unwrap(),
+            end_time: None,
+            kind: Kind::Task,
+            projected_end_time: Local::now(),
+            remaining_time: Some(iso8601::duration("PT5M").unwrap()),
+            start_time: Local::now(),
+        };
+
+        let formatted = XBar::format(&session).unwrap();
+
+        assert_eq!(formatted.lines().next().unwrap(), "⏰ A \\| B \\| C (5:00)")
+    }
+}
