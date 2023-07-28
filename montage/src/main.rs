@@ -8,7 +8,7 @@ use crate::tokio_spawner::TokioSpawner;
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, TimeZone};
 use clap::Parser;
 use color_eyre::eyre::{bail, eyre, Result, WrapErr};
-use cynic::http::{CynicReqwestError, ReqwestExt};
+
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;

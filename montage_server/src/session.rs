@@ -118,7 +118,7 @@ impl Session {
         start_time: DateTime<Local>,
         duration: Duration,
     ) -> Result<Self> {
-        Self::stop_all(&pool, start_time).await?;
+        Self::stop_all(pool, start_time).await?;
 
         let res = sqlx::query_as::<_, Session>(indoc! {"
             INSERT INTO sessions (kind, description, start_time, duration)
@@ -239,7 +239,7 @@ impl Session {
         );
 
         let start_final = std::cmp::max(start, self.start_time);
-        let end_final = std::cmp::min(end, self.end_time.unwrap_or_else(|| Local::now()));
+        let end_final = std::cmp::min(end, self.end_time.unwrap_or_else(Local::now));
 
         debug_assert!(
             end_final >= start_final,
@@ -250,7 +250,7 @@ impl Session {
     }
 
     pub fn get_actual_duration(&self) -> Duration {
-        self.end_time.unwrap_or_else(|| Local::now()) - self.start_time
+        self.end_time.unwrap_or_else(Local::now) - self.start_time
     }
 }
 
@@ -282,7 +282,7 @@ mod test {
         let now = Local::now();
 
         let new_session =
-            Session::start(&pool, Kind::Task, "foo".into(), now, Duration::minutes(25))
+            Session::start(&pool, Kind::Task, "foo", now, Duration::minutes(25))
                 .await
                 .unwrap();
         let current_session = Session::current_session(&pool).await.unwrap();
@@ -296,12 +296,12 @@ mod test {
         let now = Local::now();
         let next = now + Duration::minutes(5);
 
-        Session::start(&pool, Kind::Task, "foo".into(), now, Duration::minutes(25))
+        Session::start(&pool, Kind::Task, "foo", now, Duration::minutes(25))
             .await
             .unwrap();
 
         let session_2 =
-            Session::start(&pool, Kind::Task, "foo".into(), next, Duration::minutes(25))
+            Session::start(&pool, Kind::Task, "foo", next, Duration::minutes(25))
                 .await
                 .unwrap();
 
@@ -317,11 +317,11 @@ mod test {
         let duration = Duration::minutes(25);
         let next = now + duration;
 
-        let first_session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        let first_session = Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
 
-        Session::start(&pool, Kind::Task, "foo".into(), next, duration)
+        Session::start(&pool, Kind::Task, "foo", next, duration)
             .await
             .unwrap();
 
@@ -353,7 +353,7 @@ mod test {
         let duration = Duration::minutes(5);
         let extension = Duration::minutes(5);
 
-        let original_session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        let original_session = Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
 
@@ -372,7 +372,7 @@ mod test {
         let duration = Duration::minutes(5);
         let extension = Duration::minutes(5);
 
-        let original_session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        let original_session = Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
 
@@ -392,7 +392,7 @@ mod test {
         let now = Local::now();
         let duration = Duration::minutes(5);
 
-        let mut session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        let mut session = Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
         session.end_time = Some(now + duration);
@@ -411,7 +411,7 @@ mod test {
         let now = Local::now();
         let duration = Duration::minutes(5);
 
-        let session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        let session = Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
 
@@ -427,7 +427,7 @@ mod test {
         let now = Local::now();
         let duration = Duration::minutes(5);
 
-        Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
 
@@ -445,7 +445,7 @@ mod test {
         let now = Local::now();
         let duration = Duration::minutes(5);
 
-        Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
 
@@ -464,7 +464,7 @@ mod test {
         let duration = Duration::days(1);
         let end = now + duration;
 
-        let mut session = Session::start(&pool, Kind::Task, "foo".into(), now, duration)
+        let mut session = Session::start(&pool, Kind::Task, "foo", now, duration)
             .await
             .unwrap();
         session.end_time = Some(end);

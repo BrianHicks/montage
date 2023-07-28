@@ -60,7 +60,7 @@ impl XBar {
     }
 
     fn escape(unescaped: &str) -> String {
-        unescaped.replace("|", "\\|")
+        unescaped.replace('|', "\\|")
     }
 }
 

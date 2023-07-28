@@ -37,7 +37,7 @@ impl Report {
         let start_date = at_midnight(start);
         let end_date = at_midnight(end);
 
-        let sessions = Session::for_range_inclusive(&pool, start_date, end_date).await?;
+        let sessions = Session::for_range_inclusive(pool, start_date, end_date).await?;
 
         Ok(Self {
             sessions,
