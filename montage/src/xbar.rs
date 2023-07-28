@@ -3,6 +3,7 @@ use chrono::Duration;
 use color_eyre::eyre::{Result, WrapErr};
 use cynic::http::{CynicReqwestError, ReqwestExt};
 use cynic::QueryBuilder;
+use montage_client::current_session::Session;
 
 #[derive(Debug, clap::Parser)]
 pub struct XBar {
@@ -36,22 +37,26 @@ impl XBar {
                     .current_session
                     .expect("a current session");
 
-                let duration = Duration::from_std(std::time::Duration::from(
-                    session.remaining_time.expect("remaining time"),
-                ))
-                .wrap_err("could not parse duration")?;
-                let minutes = duration.num_minutes();
-
-                println!(
-                    "⏰ {} ({}:{:02})",
-                    Self::escape(&session.description),
-                    minutes,
-                    duration.num_seconds() - minutes * 60,
-                );
+                println!("{}", Self::format(&session)?);
             }
         };
 
         Ok(())
+    }
+
+    fn format(session: &Session) -> Result<String> {
+        let duration = Duration::from_std(std::time::Duration::from(
+            session.remaining_time.expect("remaining time"),
+        ))
+        .wrap_err("could not parse duration")?;
+        let minutes = duration.num_minutes();
+
+        Ok(format!(
+            "⏰ {} ({}:{:02})",
+            Self::escape(&session.description),
+            minutes,
+            duration.num_seconds() - minutes * 60,
+        ))
     }
 
     fn escape(unescaped: &str) -> String {
