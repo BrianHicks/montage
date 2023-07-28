@@ -11,7 +11,7 @@ use std::process::Command;
 use tokio::select;
 
 static THINGS_TO_SAY_AFTER_TASK: [&str; 4] =
-    ["hey", "Brian", "time for a break?", "need some more time?"];
+    ["hey", "Brian", "time for a break?", "need another minute?"];
 
 static THINGS_TO_SAY_AFTER_BREAK: [&str; 5] = [
     "hey",
