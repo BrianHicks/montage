@@ -8,6 +8,7 @@ pub fn crunch(input: &str, target: usize) -> String {
 struct Cruncher {
     stop_words: Regex,
     double_letters: Regex,
+    inner_word_vowels: Regex,
 }
 
 impl Cruncher {
@@ -38,6 +39,15 @@ impl Cruncher {
             }
         }
 
+        // remove inner-word vowels
+        while let Some(vowel) = self.first_inner_word_vowel(&out) {
+            out.replace_range(vowel, "");
+
+            if out.len() <= target {
+                return out;
+            }
+        }
+
         out
     }
 
@@ -47,6 +57,13 @@ impl Cruncher {
 
     fn first_double_letter<'input>(&self, input: &'input str) -> Option<Match<'input>> {
         self.double_letters.find(input)
+    }
+
+    fn first_inner_word_vowel(&self, input: &str) -> Option<Range<usize>> {
+        self.inner_word_vowels
+            .captures(input)
+            .and_then(|captures| captures.get(1))
+            .map(|vowel| vowel.range())
     }
 }
 
@@ -72,6 +89,10 @@ impl Default for Cruncher {
             .case_insensitive(true)
             .build()
             .unwrap(),
+            inner_word_vowels: RegexBuilder::new(r"\b\w+([aeiouy])\w+\b")
+                .case_insensitive(true)
+                .build()
+                .unwrap(),
         }
     }
 }
@@ -126,5 +147,12 @@ mod tests {
         let cruncher = Cruncher::default();
 
         assert_eq!(cruncher.crunch("bookkeepers", 8), "bokepers");
+    }
+
+    #[test]
+    fn removes_inner_word_vowels() {
+        let cruncher = Cruncher::default();
+
+        assert_eq!(cruncher.crunch("band", 3), "bnd");
     }
 }
