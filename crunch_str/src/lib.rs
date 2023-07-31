@@ -1,5 +1,5 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+pub fn crunch(input: &str, target: usize) -> String {
+    input.to_string()
 }
 
 #[cfg(test)]
@@ -7,8 +7,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn doesnt_shorten_string_less_than_target_size() {
+        assert_eq!(crunch("foo", 30), "foo");
+    }
+
+    #[test]
+    fn doesnt_shorten_strings_at_target_size() {
+        assert_eq!(crunch("foo", 3), "foo");
     }
 }
