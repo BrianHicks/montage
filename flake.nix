@@ -37,6 +37,7 @@
               pkgs.cargo-insta
               pkgs.cargo-machete
               pkgs.cargo-outdated
+              pkgs.cargo-edit
 
               # for the OmniFocus scripts
               pkgs.nodePackages.npm
