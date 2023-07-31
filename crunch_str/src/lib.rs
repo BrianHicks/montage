@@ -1,6 +1,33 @@
 use regex::{Match, Regex, RegexBuilder};
 use std::ops::Range;
 
+/// "crunch" a string. That is: make it as short as it can until it reaches the target length.
+///
+/// This uses an absolutely buckwild string shortening algorithm that tries to take away things
+/// that don't mean as much first, growing more and more coherent the more it has to compress. In
+/// other words, it compresses strings like you'd name startups. It works well on strings you
+/// already know; maybe not so well on things you're seeing for the first time.
+///
+/// In order, it will try to:
+///
+/// 1. Remove words in a short list of stopwords ("the", "in", "and", etc.)
+/// 2. Remove double letters from words
+/// 3. Remove inner vowels from words
+/// 4. Remove inner consonants from words
+///
+/// If all that fails, it makes one last-ditch attempt to get the string below the target size by
+/// converting it to just the initials in the words.
+///
+/// Some fun examples:
+///
+/// ```rust
+/// use crunch_str::crunch;
+///
+/// assert_eq!(crunch("bookkeeper", 4), "bkpr");
+/// assert_eq!(crunch("how are your metrics?", 10), "ae yr mts?");
+/// assert_eq!(crunch("'Twas brillig, and the slithy toves", 20), "'Tws brlg, slthy tvs");
+/// assert_eq!(crunch("a very long string with a lot of words", 5), "VLSLW");
+/// ```
 pub fn crunch(input: &str, target: usize) -> String {
     Cruncher::default().crunch(input, target)
 }
