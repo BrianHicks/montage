@@ -9,6 +9,7 @@ struct Cruncher {
     stop_words: Regex,
     double_letters: Regex,
     inner_word_vowels: Regex,
+    inner_word_consonants: Regex,
 }
 
 impl Cruncher {
@@ -48,6 +49,15 @@ impl Cruncher {
             }
         }
 
+        // remove inner-word consonants
+        while let Some(consonant) = self.first_inner_word_consonant(&out) {
+            out.replace_range(consonant, "");
+
+            if out.len() <= target {
+                return out;
+            }
+        }
+
         out
     }
 
@@ -61,6 +71,13 @@ impl Cruncher {
 
     fn first_inner_word_vowel(&self, input: &str) -> Option<Range<usize>> {
         self.inner_word_vowels
+            .captures(input)
+            .and_then(|captures| captures.get(1))
+            .map(|vowel| vowel.range())
+    }
+
+    fn first_inner_word_consonant(&self, input: &str) -> Option<Range<usize>> {
+        self.inner_word_consonants
             .captures(input)
             .and_then(|captures| captures.get(1))
             .map(|vowel| vowel.range())
@@ -90,6 +107,10 @@ impl Default for Cruncher {
             .build()
             .unwrap(),
             inner_word_vowels: RegexBuilder::new(r"\b\w+([aeiouy])\w+\b")
+                .case_insensitive(true)
+                .build()
+                .unwrap(),
+            inner_word_consonants: RegexBuilder::new(r"\b\w+([^aeiouy])\w+\b")
                 .case_insensitive(true)
                 .build()
                 .unwrap(),
@@ -154,5 +175,12 @@ mod tests {
         let cruncher = Cruncher::default();
 
         assert_eq!(cruncher.crunch("band", 3), "bnd");
+    }
+
+    #[test]
+    fn removes_inner_word_consonants() {
+        let cruncher = Cruncher::default();
+
+        assert_eq!(cruncher.crunch("qwerty", 2), "qy");
     }
 }
