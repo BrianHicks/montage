@@ -3,4 +3,5 @@ members = [
   "montage",
   "montage_server",
   "montage_client",
+  "crunch_str",
 ]
