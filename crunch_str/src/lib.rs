@@ -4,7 +4,7 @@ use std::ops::Range;
 /// "crunch" a string. That is: make it as short as it can until it reaches the target length.
 ///
 /// This uses an absolutely buckwild string shortening algorithm that tries to take away things
-/// that don't mean as much first, growing more and more coherent the more it has to compress. In
+/// that don't mean as much first, growing more and more incoherent the more it has to compress. In
 /// other words, it compresses strings like you'd name startups. It works well on strings you
 /// already know; maybe not so well on things you're seeing for the first time.
 ///
