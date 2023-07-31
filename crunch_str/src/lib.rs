@@ -1,4 +1,4 @@
-use regex::{Regex, RegexBuilder};
+use regex::{Match, Regex, RegexBuilder};
 use std::ops::Range;
 
 pub fn crunch(input: &str, target: usize) -> String {
@@ -7,15 +7,31 @@ pub fn crunch(input: &str, target: usize) -> String {
 
 struct Cruncher {
     stop_words: Regex,
+    double_letters: Regex,
 }
 
 impl Cruncher {
     fn crunch(&self, input: &str, target: usize) -> String {
         let mut out = input.to_string();
 
-        // First step: remove stopwords
+        if out.len() <= target {
+            return out;
+        }
+
+        // remove stopwords
         while let Some(stopword_range) = self.first_stopword(&out) {
             out.replace_range(stopword_range, "");
+
+            if out.len() <= target {
+                return out;
+            }
+        }
+
+        // deduplicate double letters
+        while let Some(double_match) = self.first_double_letter(&out) {
+            assert!(!double_match.is_empty());
+            let replacement: String = double_match.as_str().chars().take(1).collect();
+            out.replace_range(double_match.range(), &replacement);
 
             if out.len() <= target {
                 return out;
@@ -27,6 +43,10 @@ impl Cruncher {
 
     fn first_stopword(&self, input: &str) -> Option<Range<usize>> {
         self.stop_words.find(input).map(|word| word.range())
+    }
+
+    fn first_double_letter<'input>(&self, input: &'input str) -> Option<Match<'input>> {
+        self.double_letters.find(input)
     }
 }
 
@@ -46,6 +66,12 @@ impl Default for Cruncher {
                 .case_insensitive(true)
                 .build()
                 .unwrap(),
+            double_letters: RegexBuilder::new(
+                r"(aa|bb|cc|dd|ee|ff|gg|hh|ii|jj|kk|ll|mm|nn|oo|pp|qq|rr|ss|tt|uu|vv|ww|xx|yy|zz)",
+            )
+            .case_insensitive(true)
+            .build()
+            .unwrap(),
         }
     }
 }
@@ -93,5 +119,12 @@ mod tests {
             cruncher.crunch("the old man and the sea", 18),
             "old man the sea"
         );
+    }
+
+    #[test]
+    fn removes_double_letters() {
+        let cruncher = Cruncher::default();
+
+        assert_eq!(cruncher.crunch("bookkeepers", 8), "bokepers");
     }
 }
