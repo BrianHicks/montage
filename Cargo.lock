@@ -595,6 +595,9 @@ dependencies = [
 [[package]]
 name = "crunch_str"
 version = "0.1.0"
+dependencies = [
+ "regex",
+]
 
 [[package]]
 name = "crypto-common"
