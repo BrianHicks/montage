@@ -54,7 +54,7 @@ impl XBar {
         let escaped = Self::escape(&session.description);
 
         Ok(format!(
-            "{} {} ({}:{:02})\n{}",
+            "{} {} ({}:{:02})\n---\n{}",
             Self::emoji(session),
             crunch_str::crunch(&escaped, 40),
             minutes,
