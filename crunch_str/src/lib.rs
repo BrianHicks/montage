@@ -178,6 +178,13 @@ mod tests {
     }
 
     #[test]
+    fn removes_inner_word_vowels_multiple_times() {
+        let cruncher = Cruncher::default();
+
+        assert_eq!(cruncher.crunch("band bundt bound", 12), "bnd bndt bnd");
+    }
+
+    #[test]
     fn removes_inner_word_consonants() {
         let cruncher = Cruncher::default();
 
