@@ -58,7 +58,15 @@ impl Cruncher {
             }
         }
 
-        out
+        // last-ditch effort: make an acronym
+        let mut initials = String::with_capacity(out.len() / 2);
+        for word in out.split(char::is_whitespace) {
+            if let Some(chr) = word.chars().next() {
+                initials.push(chr.to_ascii_uppercase())
+            }
+        }
+
+        return initials;
     }
 
     fn first_stopword(&self, input: &str) -> Option<Range<usize>> {
@@ -189,5 +197,18 @@ mod tests {
         let cruncher = Cruncher::default();
 
         assert_eq!(cruncher.crunch("qwerty", 2), "qy");
+    }
+
+    #[test]
+    fn makes_acronym() {
+        let cruncher = Cruncher::default();
+
+        assert_eq!(
+            cruncher.crunch(
+                "out of the night that covers me, black as the pit from pole to pole",
+                11,
+            ),
+            "ONTCMBAPFPP"
+        );
     }
 }
