@@ -93,7 +93,7 @@ impl Cruncher {
             }
         }
 
-        return initials;
+        initials
     }
 
     fn first_stopword(&self, input: &str) -> Option<Range<usize>> {

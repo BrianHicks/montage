@@ -55,7 +55,7 @@ impl XBar {
 
         Ok(format!(
             "{} {} ({}:{:02})\n{}",
-            Self::emoji(&session),
+            Self::emoji(session),
             crunch_str::crunch(&escaped, 40),
             minutes,
             duration.num_seconds() - minutes * 60,

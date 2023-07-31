@@ -178,7 +178,7 @@ impl Vexer {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 }
 
