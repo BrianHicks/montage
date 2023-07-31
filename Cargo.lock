@@ -1531,6 +1531,7 @@ dependencies = [
  "chrono",
  "clap",
  "color-eyre",
+ "crunch_str",
  "cynic",
  "directories",
  "futures",

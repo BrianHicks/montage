@@ -9,6 +9,7 @@ edition = "2021"
 async-tungstenite = { version = "0.22.2", features = ["tokio-runtime"] }
 chrono = { version = "0.4.26", features = ["serde"] }
 clap = { version = "4.3.19", features = ["derive", "cargo", "env"] }
+crunch_str = { path = "../crunch_str" }
 color-eyre = "0.6.2"
 cynic = { version = "3.2.2", features = ["http-reqwest"] }
 directories = "5.0.1"

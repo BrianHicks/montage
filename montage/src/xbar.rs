@@ -51,12 +51,15 @@ impl XBar {
         .wrap_err("could not parse duration")?;
         let minutes = duration.num_minutes();
 
+        let escaped = Self::escape(&session.description);
+
         Ok(format!(
-            "{} {} ({}:{:02})",
+            "{} {} ({}:{:02})\n{}",
             Self::emoji(&session),
-            Self::escape(&session.description),
+            crunch_str::crunch(&escaped, 40),
             minutes,
             duration.num_seconds() - minutes * 60,
+            escaped,
         ))
     }
 
