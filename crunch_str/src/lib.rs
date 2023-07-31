@@ -106,11 +106,11 @@ impl Default for Cruncher {
             .case_insensitive(true)
             .build()
             .unwrap(),
-            inner_word_vowels: RegexBuilder::new(r"\b\w+([aeiouy])\w+\b")
+            inner_word_vowels: RegexBuilder::new(r"\b[a-z]+([aeiouy])[a-z]+\b")
                 .case_insensitive(true)
                 .build()
                 .unwrap(),
-            inner_word_consonants: RegexBuilder::new(r"\b\w+([^aeiouy])\w+\b")
+            inner_word_consonants: RegexBuilder::new(r"\b[a-z]+([bcdfghjklmnpqrstvwxz])[a-z]+\b")
                 .case_insensitive(true)
                 .build()
                 .unwrap(),
