@@ -5,6 +5,7 @@ use color_eyre::eyre::{bail, Result, WrapErr};
 use cynic::SubscriptionBuilder;
 use futures::StreamExt;
 use graphql_ws_client::CynicClientBuilder;
+use montage_client::current_session_updates::Session;
 use montage_client::current_session_updates::{CurrentSessionUpdates, Kind};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use std::process::Command;
@@ -42,7 +43,7 @@ impl VexerConfig {
 
 #[derive(Debug)]
 struct Vexer {
-    session: Option<montage_client::current_session_updates::Session>,
+    session: Option<Session>,
     rng: ThreadRng,
     backoff: std::time::Duration,
 }
@@ -168,17 +169,34 @@ impl Vexer {
                 Kind::Meeting => return Ok(()),
             };
 
-            let status = Command::new("say")
-                .arg(what_to_say)
-                .status()
-                .wrap_err("failed to run `say`")?;
-
-            if !status.success() {
-                bail!("`say` failed with status {}", status)
-            }
+            self.say(what_to_say)?;
         }
 
         Ok(())
+    }
+
+    fn say(&self, what_to_say: &str) -> Result<()> {
+        if self.in_meeting() {
+            return Ok(());
+        }
+
+        let status = Command::new("say")
+            .arg(what_to_say)
+            .status()
+            .wrap_err("failed to run `say`")?;
+
+        if !status.success() {
+            bail!("`say` failed with status {}", status)
+        }
+
+        Ok(())
+    }
+
+    fn in_meeting(&self) -> bool {
+        match self.session {
+            Some(Session { kind, .. }) => kind == Kind::Meeting,
+            _ => false,
+        }
     }
 }
 
