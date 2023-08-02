@@ -1,13 +1,6 @@
 use regex::{Regex, RegexBuilder};
 use std::ops::Range;
 
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub struct Word {
-    word: String,
-    trailing_whitespace: usize,
-    pub order: usize,
-}
-
 lazy_static::lazy_static! {
     static ref DOUBLE_LETTER_RE: Regex = RegexBuilder::new(
         r"(aa|bb|cc|dd|ee|ff|gg|hh|ii|jj|kk|ll|mm|nn|oo|pp|qq|rr|ss|tt|uu|vv|ww|xx|yy|zz)",
@@ -29,6 +22,13 @@ lazy_static::lazy_static! {
             .unwrap();
 
     static ref PUNCTUATION_RE: Regex = Regex::new(r"[\.,!?:]").unwrap();
+}
+
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub struct Word {
+    word: String,
+    trailing_whitespace: usize,
+    pub order: usize,
 }
 
 impl Word {
