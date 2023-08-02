@@ -596,6 +596,7 @@ dependencies = [
 name = "crunch_str"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "priority-queue",
  "regex",
 ]
