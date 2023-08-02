@@ -1,4 +1,5 @@
 use regex::{Regex, RegexBuilder};
+use std::collections::HashMap;
 use std::ops::Range;
 
 lazy_static::lazy_static! {
@@ -22,6 +23,35 @@ lazy_static::lazy_static! {
             .unwrap();
 
     static ref PUNCTUATION_RE: Regex = Regex::new(r"[\.,!?:]").unwrap();
+
+    static ref SUBSTITUTIONS: HashMap<String, &'static str> = {
+        let mut map = HashMap::with_capacity(19);
+
+        // numbers
+        map.insert("one".to_string(), "1");
+        map.insert("two".to_string(), "2");
+        map.insert("three".to_string(), "3");
+        map.insert("four".to_string(), "4");
+        map.insert("five".to_string(), "5");
+        map.insert("six".to_string(), "6");
+        map.insert("seven".to_string(), "7");
+        map.insert("eight".to_string(), "8");
+        map.insert("nine".to_string(), "9");
+        map.insert("ten".to_string(), "10");
+
+        // text speak
+        map.insert("and".to_string(), "&");
+        map.insert("are".to_string(), "r");
+        map.insert("be".to_string(), "b");
+        map.insert("for".to_string(), "4");
+        map.insert("our".to_string(), "r");
+        map.insert("to".to_string(), "2");
+        map.insert("why".to_string(), "y");
+        map.insert("you".to_string(), "u");
+        map.insert("your".to_string(), "ur");
+
+        map
+    };
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
@@ -51,10 +81,28 @@ impl Word {
     }
 
     pub fn priority(&self) -> usize {
-        self.word.len()
+        let base = self.len();
+
+        if self.can_substitute() {
+            base + 10
+        } else {
+            base
+        }
+    }
+
+    fn can_substitute(&self) -> bool {
+        SUBSTITUTIONS.contains_key(&self.word)
     }
 
     pub fn shorten(&mut self) -> usize {
+        if let Some(substitution) = SUBSTITUTIONS.get(&self.word) {
+            let saved = self.word.len() - substitution.len();
+
+            self.word = substitution.to_string();
+
+            return saved;
+        }
+
         if let Some(double_match) = DOUBLE_LETTER_RE.find(&self.word) {
             assert!(!double_match.is_empty());
             let replacement: String = double_match.as_str().chars().take(1).collect();
@@ -171,5 +219,13 @@ mod tests {
         assert_eq!(word.shorten(), 1);
         assert_eq!(word.shorten(), 1);
         assert_eq!(word.word, "qty");
+    }
+
+    #[test]
+    fn substitutes_shorter_meaning() {
+        let mut word = new_word("your");
+
+        assert_eq!(word.shorten(), 2);
+        assert_eq!(word.word, "ur");
     }
 }

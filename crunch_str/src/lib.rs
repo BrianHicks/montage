@@ -28,10 +28,10 @@ use priority_queue::PriorityQueue;
 /// ```rust
 /// use crunch_str::crunch;
 ///
-/// // assert_eq!(crunch("bookkeeper", 4), "bkpr");
-/// // assert_eq!(crunch("how are your metrics?", 13), "ae yr mts?");
-/// // assert_eq!(crunch("'Twas brillig, and the slithy toves", 20), "'Tws brlg, slthy tvs");
-/// // assert_eq!(crunch("a very long string with a lot of words", 5), "VLSLW");
+/// assert_eq!(crunch("bookkeeper", 4), "bkpr");
+/// assert_eq!(crunch("how are your metrics?", 15), "how r ur mtrcs?");
+/// assert_eq!(crunch("'Twas brillig, and the slithy toves", 23), "'Ts blg, & the sthy tvs");
+/// assert_eq!(crunch("a very long string with a lot of words", 9), "AVLSWALOW");
 /// ```
 pub fn crunch(input: &str, target: usize) -> String {
     if input.len() <= target {
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn cruncher_crunches_longest_word_first() {
-        assert_eq!(crunch("a be creative", 10), "a be crtve");
+        assert_eq!(crunch("a be creative", 9), "a b crtve");
     }
 
     #[test]
@@ -125,7 +125,7 @@ mod tests {
                 "out of the night that covers me, black as the pit from pole to pole",
                 15,
             ),
-            "OOTNTCMBATPFPTP"
+            "OOTNTCMBATPFP2P"
         );
     }
 }
