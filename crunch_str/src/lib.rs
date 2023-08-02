@@ -74,7 +74,7 @@ pub fn crunch(input: &str, target: usize) -> String {
 
     finished_words
         .drain(..)
-        .map(|word| word.word)
+        .map(|word| word.to_string())
         .collect::<Vec<String>>()
         .join("")
 }

@@ -3,7 +3,8 @@ use std::ops::Range;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub struct Word {
-    pub word: String,
+    word: String,
+    trailing_whitespace: usize,
     pub order: usize,
 }
 
@@ -31,8 +32,18 @@ lazy_static::lazy_static! {
 }
 
 impl Word {
-    pub fn new(word: String, order: usize) -> Self {
-        Self { word, order }
+    pub fn new(mut word: String, order: usize) -> Self {
+        let mut trailing_whitespace = 0;
+        while word.ends_with(char::is_whitespace) {
+            trailing_whitespace += 1;
+            word.pop();
+        }
+
+        Self {
+            word,
+            trailing_whitespace,
+            order,
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -40,11 +51,7 @@ impl Word {
     }
 
     pub fn priority(&self) -> usize {
-        if self.word.ends_with(' ') {
-            self.word.len() - 1
-        } else {
-            self.word.len()
-        }
+        self.word.len()
     }
 
     pub fn shorten(&mut self) -> usize {
@@ -74,13 +81,14 @@ impl Word {
             return 1;
         }
 
-        if self.priority() <= 3 {
+        if self.len() <= 2 {
             self.word = self
                 .word
                 .chars()
                 .take(1)
                 .map(|c| c.to_ascii_uppercase())
                 .collect();
+            self.trailing_whitespace = 0;
         }
 
         0
@@ -98,6 +106,17 @@ impl Word {
             .captures(&self.word)
             .and_then(|captures| captures.get(1))
             .map(|vowel| vowel.range())
+    }
+
+    pub fn to_string(&self) -> String {
+        let mut out = String::with_capacity(self.word.len() + self.trailing_whitespace);
+
+        out.push_str(&self.word);
+        for _ in 0..self.trailing_whitespace {
+            out.push(' ');
+        }
+
+        out
     }
 }
 
