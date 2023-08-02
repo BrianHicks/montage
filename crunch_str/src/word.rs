@@ -249,10 +249,12 @@ mod tests {
     }
 
     #[test]
-    fn substitutes_shorter_meaning() {
-        let mut word = new_word("your");
+    fn substitutes_shorter_meanings() {
+        SUBSTITUTIONS.iter().for_each(|(key, sub)| {
+            let mut word = new_word(key);
 
-        assert_eq!(word.shorten(), 2);
-        assert_eq!(word.word, "ur");
+            assert_eq!(word.shorten(), key.len() - sub.len());
+            assert_eq!(word.word, sub.to_string());
+        });
     }
 }
