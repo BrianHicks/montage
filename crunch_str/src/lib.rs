@@ -8,12 +8,16 @@ use std::ops::Range;
 /// other words, it compresses strings like you'd name startups. It works well on strings you
 /// already know; maybe not so well on things you're seeing for the first time.
 ///
-/// In order, it will try to:
+/// It will try to:
 ///
-/// 1. Remove words in a short list of stopwords ("the", "in", "and", etc.)
-/// 2. Remove double letters from words
-/// 3. Remove inner vowels from words
-/// 4. Remove inner consonants from words
+/// - Shorten short/common words to shorter or more casual equivalents (e.g. replacing "one" with
+///   "1" or "you" with "u".)
+/// - Remove double letters from words
+/// - Remove inner vowels from words
+/// - Remove inner consonants from words
+///
+/// It does this longest-word-first, reasoning that a longer word is more likely to be readable
+/// with a single character missing than a shorter word.
 ///
 /// If all that fails, it makes one last-ditch attempt to get the string below the target size by
 /// converting it to just the initials in the words.
