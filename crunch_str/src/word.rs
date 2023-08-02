@@ -16,6 +16,12 @@ lazy_static::lazy_static! {
             .build()
             .unwrap();
 
+    static ref TRAILING_VOWELS_RE: Regex =
+        RegexBuilder::new(r"\b[a-z]+?([aeiou])\b")
+            .case_insensitive(true)
+            .build()
+            .unwrap();
+
     static ref INNER_WORD_CONSONANTS_RE: Regex =
         RegexBuilder::new(r"\b[a-z]+?([bcdfghjklmnpqrstvwxz])[a-z]+\b")
             .case_insensitive(true)
@@ -117,6 +123,12 @@ impl Word {
             return 1;
         }
 
+        if let Some(vowel) = self.trailing_vowel() {
+            self.word.replace_range(vowel, "");
+
+            return 1;
+        }
+
         if let Some(consonant) = self.first_inner_word_consonant() {
             self.word.replace_range(consonant, "");
 
@@ -144,6 +156,13 @@ impl Word {
 
     fn first_inner_word_vowel(&self) -> Option<Range<usize>> {
         INNER_WORD_VOWELS_RE
+            .captures(&self.word)
+            .and_then(|captures| captures.get(1))
+            .map(|vowel| vowel.range())
+    }
+
+    fn trailing_vowel(&self) -> Option<Range<usize>> {
+        TRAILING_VOWELS_RE
             .captures(&self.word)
             .and_then(|captures| captures.get(1))
             .map(|vowel| vowel.range())
@@ -197,6 +216,14 @@ mod tests {
 
         assert_eq!(word.shorten(), 1);
         assert_eq!(word.word, "dlicious");
+    }
+
+    #[test]
+    fn removes_trailing_vowels() {
+        let mut word = new_word("the");
+
+        assert_eq!(word.shorten(), 1);
+        assert_eq!(word.word, "th");
     }
 
     #[test]
