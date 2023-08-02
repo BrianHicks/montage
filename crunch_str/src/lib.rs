@@ -128,4 +128,9 @@ mod tests {
             "OOTNTCMBATPFP2P"
         );
     }
+
+    #[test]
+    fn substitutions_are_prioritized() {
+        assert_eq!(crunch("hello to you", 9), "hello 2 u");
+    }
 }
