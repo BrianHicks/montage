@@ -31,7 +31,7 @@ lazy_static::lazy_static! {
     static ref PUNCTUATION_RE: Regex = Regex::new(r"[\.,!?:]").unwrap();
 
     static ref SUBSTITUTIONS: HashMap<String, &'static str> = {
-        let mut map = HashMap::with_capacity(19);
+        let mut map = HashMap::with_capacity(20);
 
         // numbers
         map.insert("one".to_string(), "1");
@@ -55,6 +55,9 @@ lazy_static::lazy_static! {
         map.insert("why".to_string(), "y");
         map.insert("you".to_string(), "u");
         map.insert("your".to_string(), "ur");
+
+        // misc
+        map.insert("make".to_string(), "mk");
 
         map
     };
