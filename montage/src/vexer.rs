@@ -33,6 +33,9 @@ pub struct VexerConfig {
     #[arg(long, default_value = "say")]
     tts_command: String,
 
+    #[arg(long)]
+    tts_arg: Vec<String>,
+
     #[command(flatten)]
     client: crate::graphql_client::GraphQLClientOptions,
 }
@@ -198,6 +201,7 @@ impl<'config> Vexer<'config> {
         }
 
         let status = Command::new(&self.config.tts_command)
+            .args(&self.config.tts_arg)
             .arg(what_to_say)
             .status()
             .wrap_err("failed to run `say`")?;
