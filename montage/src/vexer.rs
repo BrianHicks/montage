@@ -30,9 +30,11 @@ pub struct VexerConfig {
     #[arg(long, default_value = "2")]
     remind_interval: u64,
 
+    /// What command to run for TTS
     #[arg(long, default_value = "say")]
     tts_command: String,
 
+    /// Args to the TTS command
     #[arg(long)]
     tts_arg: Vec<String>,
 
