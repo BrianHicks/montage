@@ -30,6 +30,9 @@ pub struct VexerConfig {
     #[arg(long, default_value = "2")]
     remind_interval: u64,
 
+    #[arg(long, default_value = "say")]
+    tts_command: String,
+
     #[command(flatten)]
     client: crate::graphql_client::GraphQLClientOptions,
 }
@@ -194,7 +197,7 @@ impl<'config> Vexer<'config> {
             return Ok(());
         }
 
-        let status = Command::new("say")
+        let status = Command::new(&self.config.tts_command)
             .arg(what_to_say)
             .status()
             .wrap_err("failed to run `say`")?;
