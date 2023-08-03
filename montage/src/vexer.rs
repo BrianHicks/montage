@@ -8,6 +8,7 @@ use graphql_ws_client::CynicClientBuilder;
 use montage_client::current_session_updates::Session;
 use montage_client::current_session_updates::{CurrentSessionUpdates, Kind};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
+use std::collections::HashSet;
 use std::process::Command;
 use tokio::select;
 
@@ -38,6 +39,10 @@ pub struct VexerConfig {
     #[arg(long)]
     tts_arg: Vec<String>,
 
+    /// Get reminders at these intervals before the end of the session (in minutes)
+    #[arg(long, short, default_values = ["15", "10", "5", "1"])]
+    reminder_at: Vec<i64>,
+
     #[command(flatten)]
     client: crate::graphql_client::GraphQLClientOptions,
 }
@@ -55,6 +60,9 @@ struct Vexer<'config> {
     session: Option<Session>,
     rng: ThreadRng,
     backoff: std::time::Duration,
+
+    reminders_to_give: HashSet<chrono::Duration>,
+    reminders_given: HashSet<chrono::Duration>,
 }
 
 impl<'config> Vexer<'config> {
@@ -64,6 +72,13 @@ impl<'config> Vexer<'config> {
             session: None,
             rng: rand::thread_rng(),
             backoff: std::time::Duration::from_secs(0),
+
+            reminders_to_give: config
+                .reminder_at
+                .iter()
+                .map(|minutes| chrono::Duration::minutes(*minutes))
+                .collect(),
+            reminders_given: HashSet::with_capacity(config.reminder_at.len()),
         }
     }
 
@@ -158,12 +173,37 @@ impl<'config> Vexer<'config> {
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
     ) {
-        self.session = session_opt
+        self.session = session_opt;
+
+        if let Some(session) = &self.session {
+            let time_remaining = session.projected_end_time - Local::now();
+
+            self.reminders_given.clear();
+            self.reminders_to_give.iter().for_each(|reminder| {
+                if reminder >= &time_remaining {
+                    self.reminders_given.insert(*reminder);
+                }
+            });
+            tracing::info!(reminders=?self.reminders_to_give, "reset reminders");
+        }
     }
 
     fn tick(&mut self) -> Result<()> {
         if let Some(session) = &self.session {
             let time_remaining = session.projected_end_time - Local::now();
+
+            for reminder in &self.reminders_to_give {
+                // could use difference but it results in an immutable borrow and we need it to be
+                // immutable just below.
+                if self.reminders_given.contains(&reminder) {
+                    continue;
+                }
+
+                if reminder >= &time_remaining {
+                    self.give_reminder(&reminder)?;
+                    self.reminders_given.insert(*reminder);
+                }
+            }
 
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
@@ -173,6 +213,16 @@ impl<'config> Vexer<'config> {
         }
 
         Ok(())
+    }
+
+    fn give_reminder(&self, reminder_at: &chrono::Duration) -> Result<()> {
+        let minutes = reminder_at.num_minutes();
+
+        if minutes == 1 {
+            self.say("one minute left")
+        } else {
+            self.say(&format!("{minutes} minutes left"))
+        }
     }
 
     fn annoy(&mut self) -> Result<()> {
