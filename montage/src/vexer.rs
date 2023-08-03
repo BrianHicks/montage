@@ -36,22 +36,33 @@ pub struct VexerConfig {
 
 impl VexerConfig {
     pub async fn run(&self) -> Result<()> {
-        let mut vexer = Vexer::default();
-        vexer.run(self).await
+        let mut vexer = Vexer::new(self);
+        vexer.run().await
     }
 }
 
 #[derive(Debug)]
-struct Vexer {
+struct Vexer<'config> {
+    config: &'config VexerConfig,
     session: Option<Session>,
     rng: ThreadRng,
     backoff: std::time::Duration,
 }
 
-impl Vexer {
-    async fn run(&mut self, config: &VexerConfig) -> Result<()> {
-        let mut interval =
-            tokio::time::interval(tokio::time::Duration::from_secs(config.remind_interval));
+impl<'config> Vexer<'config> {
+    fn new(config: &'config VexerConfig) -> Self {
+        Self {
+            config,
+            session: None,
+            rng: rand::thread_rng(),
+            backoff: std::time::Duration::from_secs(0),
+        }
+    }
+
+    async fn run(&mut self) -> Result<()> {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
+            self.config.remind_interval,
+        ));
 
         loop {
             if !self.backoff.is_zero() {
@@ -62,15 +73,18 @@ impl Vexer {
             }
             tokio::time::sleep(self.backoff).await;
 
-            let (connection, _) =
-                match async_tungstenite::tokio::connect_async(config.client.request()?).await {
-                    Ok(conn) => conn,
-                    Err(err) => {
-                        tracing::error!(err = err.to_string(), "could not connect");
-                        self.increment_backoff();
-                        continue;
-                    }
-                };
+            let (connection, _) = match async_tungstenite::tokio::connect_async(
+                self.config.client.request()?,
+            )
+            .await
+            {
+                Ok(conn) => conn,
+                Err(err) => {
+                    tracing::error!(err = err.to_string(), "could not connect");
+                    self.increment_backoff();
+                    continue;
+                }
+            };
 
             let (sink, stream) = connection.split();
             let mut client = CynicClientBuilder::new()
@@ -196,16 +210,6 @@ impl Vexer {
         match self.session {
             Some(Session { kind, .. }) => kind == Kind::Meeting,
             _ => false,
-        }
-    }
-}
-
-impl Default for Vexer {
-    fn default() -> Self {
-        Self {
-            session: None,
-            rng: rand::thread_rng(),
-            backoff: std::time::Duration::from_secs(0),
         }
     }
 }
