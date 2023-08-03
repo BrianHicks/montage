@@ -184,7 +184,7 @@ impl<'config> Vexer<'config> {
                     self.reminders_given.insert(*reminder);
                 }
             });
-            tracing::info!(reminders=?self.reminders_to_give, "reset reminders");
+            tracing::info!(reminders=?self.reminders_to_give.difference(&self.reminders_given), "reset reminders");
         }
     }
 
