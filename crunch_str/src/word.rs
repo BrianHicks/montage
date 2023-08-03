@@ -30,37 +30,33 @@ lazy_static::lazy_static! {
 
     static ref PUNCTUATION_RE: Regex = Regex::new(r"[\.,!?:]").unwrap();
 
-    static ref SUBSTITUTIONS: HashMap<String, &'static str> = {
-        let mut map = HashMap::with_capacity(20);
-
+    static ref SUBSTITUTIONS: HashMap<String, &'static str> = HashMap::from([
         // numbers
-        map.insert("one".to_string(), "1");
-        map.insert("two".to_string(), "2");
-        map.insert("three".to_string(), "3");
-        map.insert("four".to_string(), "4");
-        map.insert("five".to_string(), "5");
-        map.insert("six".to_string(), "6");
-        map.insert("seven".to_string(), "7");
-        map.insert("eight".to_string(), "8");
-        map.insert("nine".to_string(), "9");
-        map.insert("ten".to_string(), "10");
+        ("one".to_string(), "1"),
+        ("two".to_string(), "2"),
+        ("three".to_string(), "3"),
+        ("four".to_string(), "4"),
+        ("five".to_string(), "5"),
+        ("six".to_string(), "6"),
+        ("seven".to_string(), "7"),
+        ("eight".to_string(), "8"),
+        ("nine".to_string(), "9"),
+        ("ten".to_string(), "10"),
 
         // text speak
-        map.insert("and".to_string(), "&");
-        map.insert("are".to_string(), "r");
-        map.insert("be".to_string(), "b");
-        map.insert("for".to_string(), "4");
-        map.insert("our".to_string(), "r");
-        map.insert("to".to_string(), "2");
-        map.insert("why".to_string(), "y");
-        map.insert("you".to_string(), "u");
-        map.insert("your".to_string(), "ur");
+        ("and".to_string(), "&"),
+        ("are".to_string(), "r"),
+        ("be".to_string(), "b"),
+        ("for".to_string(), "4"),
+        ("our".to_string(), "r"),
+        ("to".to_string(), "2"),
+        ("why".to_string(), "y"),
+        ("you".to_string(), "u"),
+        ("your".to_string(), "ur"),
 
         // misc
-        map.insert("make".to_string(), "mk");
-
-        map
-    };
+        ("make".to_string(), "mk"),
+    ]);
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
