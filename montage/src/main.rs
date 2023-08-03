@@ -29,9 +29,6 @@ struct Opts {
 
     #[arg(long, env = "MONTAGE_LOG_LEVEL", global = true, default_value = "INFO")]
     log_level: tracing::Level,
-
-    #[arg(long, env = "MONTAGE_DB", global = true)]
-    db_dir: Option<PathBuf>,
 }
 
 impl Opts {
@@ -313,13 +310,18 @@ impl Opts {
             }
             Command::Xbar(xbar) => xbar.run().await?,
             Command::Vex(vexer) => vexer.run().await?,
-            Command::Serve { addr, port } => {
-                montage_server::serve(self.open_sqlite_database().await?, *addr, *port).await?
+            Command::Serve { addr, port, db_dir } => {
+                montage_server::serve(
+                    self.open_sqlite_database(db_dir.clone()).await?,
+                    *addr,
+                    *port,
+                )
+                .await?
             }
             Command::ShowGraphqlSchema => {
                 println!(
                     "{}",
-                    montage_server::schema(self.open_sqlite_database().await?)
+                    montage_server::schema(self.open_sqlite_database(None).await?)
                         .await?
                         .sdl()
                 )
@@ -343,9 +345,9 @@ impl Opts {
             .num_minutes())
     }
 
-    async fn open_sqlite_database(&self) -> Result<Pool<Sqlite>> {
+    async fn open_sqlite_database(&self, db_dir_option: Option<PathBuf>) -> Result<Pool<Sqlite>> {
         // TODO: could we get rid of the to_owned calls somehow?
-        let db_dir = match &self.db_dir {
+        let db_dir = match db_dir_option {
             Some(db) => db
                 .parent()
                 .map(|parent| parent.to_owned())
@@ -506,6 +508,10 @@ enum Command {
         /// The port to bind to
         #[arg(long, default_value = crate::graphql_client::DEFAULT_PORT, env = "MONTAGE_PORT")]
         port: u16,
+
+        /// Where to store the database
+        #[arg(long, env = "MONTAGE_DB")]
+        db_dir: Option<PathBuf>,
     },
 
     /// Export the GraphQL SDL for the server
