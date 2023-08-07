@@ -12,7 +12,7 @@ query ReportQuery($start: DateTime!, $end: DateTime!) {
       task
       meeting
       working
-      tasksByDescription {
+      sessionsByDescription {
         description
         total
       }
