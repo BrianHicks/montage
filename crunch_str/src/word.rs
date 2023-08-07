@@ -51,6 +51,7 @@ lazy_static::lazy_static! {
         ("our".to_string(), "r"),
         ("to".to_string(), "2"),
         ("why".to_string(), "y"),
+        ("with".to_string(), "w/"),
         ("you".to_string(), "u"),
         ("your".to_string(), "ur"),
 
