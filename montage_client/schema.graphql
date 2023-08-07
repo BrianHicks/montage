@@ -136,6 +136,7 @@ period.
 """
 type TotalByDescription {
 	description: String!
+	kind: Kind!
 	total: Duration!
 }
 
@@ -160,7 +161,7 @@ type Totals {
 	"""
 	Total time spent on tasks, broken down by task name
 	"""
-	tasksByDescription: [TotalByDescription!]!
+	sessionsByDescription: [TotalByDescription!]!
 	"""
 	Total time spent in meetings
 	"""
