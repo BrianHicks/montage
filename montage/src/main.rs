@@ -253,7 +253,7 @@ impl Opts {
                 handlebars_helper!(lower: |input: String| input.to_ascii_lowercase());
                 handlebars.register_helper("lower", Box::new(lower));
 
-                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n{{#if include_task_totals}}\n\n### Task Totals\n\n{{#each report.totals.tasks_by_description}}- {{>total_by_description}}\n{{/each}}{{/if}}{{#if include_sessions}}\n### Log\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
+                let default_template = String::from("## Montage Sessions\n\n{{> date_range}}\n\n\n{{> totals report.totals}}\n\n{{#if include_task_totals}}\n\n### Task Totals\n\n{{#each report.totals.sessions_by_description}}- {{>task_by_description}}\n{{/each}}{{/if}}{{#if include_sessions}}\n### Log\n\n{{#each report.sessions}}- {{>session}}\n{{/each}}{{/if}}");
 
                 handlebars.register_template_string::<String>(
                     "report",
@@ -279,8 +279,8 @@ impl Opts {
                 )?;
 
                 handlebars.register_template_string(
-                    "total_by_description",
-                    "**{{hms total}}** {{description}}",
+                    "task_by_description",
+                    "**{{hms total}}** {{description}} ({{lower kind}})",
                 )?;
 
                 println!("{}", handlebars.render("report", &context)?);
