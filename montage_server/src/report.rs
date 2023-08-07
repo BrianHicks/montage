@@ -86,7 +86,7 @@ pub struct Totals {
     /// The total time spent on tasks
     pub task: Duration,
 
-    /// Total time spent on tasks, broken down by task name
+    /// Total time spent on tasks, broken down by task name. Does not include long breaks.
     pub sessions_by_description: Vec<TotalByDescription>,
 
     /// Total time spent in meetings
@@ -138,24 +138,37 @@ impl Totals {
             let session_total_within_dates = session.total_time_within_dates(start_date, end_date);
             debug_assert!(session_total_within_dates >= Duration::zero());
 
-            sessions_by_description
-                .entry((&session.description, &session.kind))
-                .and_modify(|current| *current = *current + session_total_within_dates)
-                .or_insert(session_total_within_dates);
-
             match session.kind {
                 Kind::Task => {
                     totals.task = totals.task + session_total_within_dates;
+
+                    // TODO: deduplicate?
+                    sessions_by_description
+                        .entry((&session.description, &session.kind))
+                        .and_modify(|current| *current = *current + session_total_within_dates)
+                        .or_insert(session_total_within_dates);
                 }
                 Kind::Break => match BreakKind::from(session.get_actual_duration()) {
                     BreakKind::Short => {
-                        totals.short_break = totals.short_break + session_total_within_dates
+                        totals.short_break = totals.short_break + session_total_within_dates;
+
+                        sessions_by_description
+                            .entry((&session.description, &session.kind))
+                            .and_modify(|current| *current = *current + session_total_within_dates)
+                            .or_insert(session_total_within_dates);
                     }
                     BreakKind::Long => {
                         totals.long_break = totals.long_break + session_total_within_dates
                     }
                 },
-                Kind::Meeting => totals.meeting = totals.meeting + session_total_within_dates,
+                Kind::Meeting => {
+                    totals.meeting = totals.meeting + session_total_within_dates;
+
+                    sessions_by_description
+                        .entry((&session.description, &session.kind))
+                        .and_modify(|current| *current = *current + session_total_within_dates)
+                        .or_insert(session_total_within_dates);
+                }
             };
         }
 
