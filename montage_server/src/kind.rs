@@ -2,7 +2,7 @@ use chrono::Duration;
 use once_cell::sync::Lazy;
 
 /// What kind of session are we going to have?
-#[derive(async_graphql::Enum, Debug, PartialEq, Eq, Copy, Clone, sqlx::Type)]
+#[derive(async_graphql::Enum, Debug, PartialEq, Eq, Copy, Clone, sqlx::Type, Hash)]
 #[sqlx(rename_all = "lowercase")]
 pub enum Kind {
     /// A session focused on doing something

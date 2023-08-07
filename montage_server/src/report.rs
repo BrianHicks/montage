@@ -87,7 +87,7 @@ pub struct Totals {
     pub task: Duration,
 
     /// Total time spent on tasks, broken down by task name
-    pub tasks_by_description: Vec<TotalByDescription>,
+    pub sessions_by_description: Vec<TotalByDescription>,
 
     /// Total time spent in meetings
     meeting: Duration,
@@ -98,6 +98,7 @@ pub struct Totals {
 #[derive(SimpleObject, Debug, PartialEq, Eq)]
 pub struct TotalByDescription {
     description: String,
+    kind: Kind,
     total: Duration,
 }
 
@@ -115,7 +116,7 @@ impl Default for Totals {
             short_break: Duration::zero(),
             long_break: Duration::zero(),
             task: Duration::zero(),
-            tasks_by_description: Vec::new(),
+            sessions_by_description: Vec::new(),
             meeting: Duration::zero(),
         }
     }
@@ -128,7 +129,7 @@ impl Totals {
         end: DateTime<Local>,
     ) -> Self {
         let mut totals = Self::default();
-        let mut tasks_by_description = HashMap::with_capacity(sessions.len());
+        let mut sessions_by_description = HashMap::with_capacity(sessions.len());
 
         let start_date = at_midnight(start);
         let end_date = at_one_second_to_midnight(end);
@@ -137,13 +138,14 @@ impl Totals {
             let session_total_within_dates = session.total_time_within_dates(start_date, end_date);
             debug_assert!(session_total_within_dates >= Duration::zero());
 
+            sessions_by_description
+                .entry((&session.description, &session.kind))
+                .and_modify(|current| *current = *current + session_total_within_dates)
+                .or_insert(session_total_within_dates);
+
             match session.kind {
                 Kind::Task => {
                     totals.task = totals.task + session_total_within_dates;
-                    tasks_by_description
-                        .entry(&session.description)
-                        .and_modify(|current| *current = *current + session_total_within_dates)
-                        .or_insert(session_total_within_dates);
                 }
                 Kind::Break => match BreakKind::from(session.get_actual_duration()) {
                     BreakKind::Short => {
@@ -161,14 +163,15 @@ impl Totals {
         debug_assert!(totals.long_break >= Duration::zero());
         debug_assert!(totals.task >= Duration::zero());
 
-        totals.tasks_by_description = tasks_by_description
+        totals.sessions_by_description = sessions_by_description
             .drain()
-            .map(|(description, total)| TotalByDescription {
+            .map(|((description, kind), total)| TotalByDescription {
                 description: description.clone(),
+                kind: *kind,
                 total,
             })
             .collect();
-        totals.tasks_by_description.sort_by_key(|t| -t.total);
+        totals.sessions_by_description.sort_by_key(|t| -t.total);
 
         totals
     }
@@ -208,8 +211,9 @@ mod test {
                 short_break: Duration::zero(),
                 long_break: Duration::zero(),
                 task: Duration::minutes(10),
-                tasks_by_description: vec![TotalByDescription {
+                sessions_by_description: vec![TotalByDescription {
                     description: String::from("description"),
+                    kind: Kind::Task,
                     total: Duration::minutes(10),
                 }],
                 meeting: Duration::zero(),
@@ -236,7 +240,7 @@ mod test {
                 short_break: Duration::minutes(10),
                 long_break: Duration::zero(),
                 task: Duration::zero(),
-                tasks_by_description: Vec::new(),
+                sessions_by_description: Vec::new(),
                 meeting: Duration::zero(),
             }
         )
@@ -261,7 +265,7 @@ mod test {
                 short_break: Duration::zero(),
                 long_break: Duration::hours(2),
                 task: Duration::zero(),
-                tasks_by_description: Vec::new(),
+                sessions_by_description: Vec::new(),
                 meeting: Duration::zero(),
             }
         )
@@ -286,7 +290,7 @@ mod test {
                 short_break: Duration::zero(),
                 long_break: Duration::zero(),
                 task: Duration::zero(),
-                tasks_by_description: Vec::new(),
+                sessions_by_description: Vec::new(),
                 meeting: Duration::hours(2),
             }
         )
@@ -313,7 +317,7 @@ mod test {
                 short_break: Duration::zero(),
                 long_break: Duration::hours(8),
                 task: Duration::zero(),
-                tasks_by_description: Vec::new(),
+                sessions_by_description: Vec::new(),
                 meeting: Duration::zero(),
             }
         )
