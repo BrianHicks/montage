@@ -159,7 +159,7 @@ type Totals {
 	"""
 	task: Duration!
 	"""
-	Total time spent on tasks, broken down by task name
+	Total time spent on tasks, broken down by task name. Does not include long breaks.
 	"""
 	sessionsByDescription: [TotalByDescription!]!
 	"""
