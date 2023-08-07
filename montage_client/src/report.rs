@@ -37,6 +37,7 @@ pub struct Totals {
 #[derive(cynic::QueryFragment, Debug, Serialize)]
 pub struct TotalByDescription {
     pub description: String,
+    pub kind: Kind,
     pub total: Duration,
 }
 
