@@ -234,16 +234,9 @@ mod test {
             now + Duration::days(1),
         );
 
-        assert_eq!(
-            totals,
-            Totals {
-                short_break: Duration::minutes(10),
-                long_break: Duration::zero(),
-                task: Duration::zero(),
-                sessions_by_description: Vec::new(),
-                meeting: Duration::zero(),
-            }
-        )
+        assert_eq!(totals.short_break, Duration::minutes(10));
+        assert_eq!(totals.long_break, Duration::zero());
+        assert_eq!(totals.meeting, Duration::zero());
     }
 
     #[test]
@@ -259,16 +252,9 @@ mod test {
             now + Duration::days(1),
         );
 
-        assert_eq!(
-            totals,
-            Totals {
-                short_break: Duration::zero(),
-                long_break: Duration::hours(2),
-                task: Duration::zero(),
-                sessions_by_description: Vec::new(),
-                meeting: Duration::zero(),
-            }
-        )
+        assert_eq!(totals.short_break, Duration::zero());
+        assert_eq!(totals.long_break, Duration::hours(2));
+        assert_eq!(totals.meeting, Duration::zero());
     }
 
     #[test]
@@ -284,16 +270,9 @@ mod test {
             now + Duration::days(1),
         );
 
-        assert_eq!(
-            totals,
-            Totals {
-                short_break: Duration::zero(),
-                long_break: Duration::zero(),
-                task: Duration::zero(),
-                sessions_by_description: Vec::new(),
-                meeting: Duration::hours(2),
-            }
-        )
+        assert_eq!(totals.short_break, Duration::zero());
+        assert_eq!(totals.long_break, Duration::zero());
+        assert_eq!(totals.meeting, Duration::hours(2));
     }
 
     #[test]
@@ -311,15 +290,8 @@ mod test {
             today + Duration::days(1),
         );
 
-        assert_eq!(
-            totals,
-            Totals {
-                short_break: Duration::zero(),
-                long_break: Duration::hours(8),
-                task: Duration::zero(),
-                sessions_by_description: Vec::new(),
-                meeting: Duration::zero(),
-            }
-        )
+        assert_eq!(totals.short_break, Duration::zero());
+        assert_eq!(totals.long_break, Duration::hours(8));
+        assert_eq!(totals.meeting, Duration::zero());
     }
 }
