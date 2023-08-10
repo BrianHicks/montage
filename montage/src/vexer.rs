@@ -1,3 +1,4 @@
+use super::scripts::Script;
 use super::TokioSpawner;
 use chrono::Local;
 use clap::Parser;
@@ -137,7 +138,9 @@ impl<'config> Vexer<'config> {
                                     session=?session_opt,
                                     "got a new session"
                                 );
-                                self.got_new_session(session_opt);
+                                if let Err(err) = self.got_new_session(session_opt) {
+                                    tracing::error!(err=?err, "error in new session");
+                                };
                             },
                             Some(Err(err)) => {
                                 tracing::error!(err=?err, "error getting next sesson");
@@ -176,10 +179,12 @@ impl<'config> Vexer<'config> {
     fn got_new_session(
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
-    ) {
+    ) -> Result<()> {
         self.session = session_opt;
 
         if let Some(session) = &self.session {
+            self.run_script(Script::SessionStarted)?;
+
             let time_remaining = session.projected_end_time - Local::now();
 
             self.reminders_given.clear();
@@ -190,6 +195,8 @@ impl<'config> Vexer<'config> {
             });
             tracing::info!(reminders=?self.reminders_to_give.difference(&self.reminders_given), "reset reminders");
         }
+
+        Ok(())
     }
 
     fn tick(&mut self) -> Result<()> {
@@ -274,5 +281,9 @@ impl<'config> Vexer<'config> {
             Some(Session { kind, .. }) => kind == Kind::Meeting,
             _ => false,
         }
+    }
+
+    fn run_script(&self, script: Script) -> Result<()> {
+        script.run_from(&self.config.script_dir)
     }
 }

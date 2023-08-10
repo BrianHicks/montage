@@ -1,4 +1,5 @@
 mod graphql_client;
+mod scripts;
 mod tokio_spawner;
 mod vexer;
 mod xbar;
