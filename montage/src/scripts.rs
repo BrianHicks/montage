@@ -30,16 +30,32 @@ impl Script<'_> {
         }
     }
 
+    fn session(&self) -> &Session {
+        match self {
+            Self::NewSession { session } => session,
+            Self::SessionEnded { session } => session,
+            Self::Reminder { session, .. } => session,
+            Self::Annoy { session } => session,
+        }
+    }
+
     fn args(&self) -> Vec<String> {
         match self {
-            Self::NewSession { session } => vec![serde_json::to_string(session).unwrap()],
-            Self::SessionEnded { session } => vec![serde_json::to_string(session).unwrap()],
-            Self::Reminder { session, reminder } => vec![
-                reminder.num_seconds().to_string(),
-                serde_json::to_string(session).unwrap(),
-            ],
-            Self::Annoy { session } => vec![serde_json::to_string(session).unwrap()],
+            Self::NewSession { session } => {
+                vec![
+                    session.description.clone(),
+                    session.kind.to_string(),
+                    session.duration.to_string(),
+                ]
+            }
+            Self::SessionEnded { .. } => vec![],
+            Self::Reminder { reminder, .. } => vec![reminder.num_seconds().to_string()],
+            Self::Annoy { .. } => vec![],
         }
+    }
+
+    fn env(&self) -> Vec<(&str, String)> {
+        vec![("SESSION", serde_json::to_string(self.session()).unwrap())]
     }
 
     pub fn run_from(&self, script_dir: &Option<PathBuf>) -> Result<()> {
@@ -58,6 +74,7 @@ impl Script<'_> {
             tracing::info!(script_name = script_name, "running script");
             let status = Command::new(script_path)
                 .args(self.args())
+                .envs(self.env())
                 .status()
                 .wrap_err_with(|| format!("failed to run {script_name}"))?;
 

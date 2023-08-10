@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[cynic::schema("montage")]
 mod schema {}
 
@@ -28,6 +30,16 @@ pub enum Kind {
     Task,
     Break,
     Meeting,
+}
+
+impl Display for Kind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Task => f.write_str("task"),
+            Self::Break => f.write_str("break"),
+            Self::Meeting => f.write_str("meeeting"),
+        }
+    }
 }
 
 type DateTime = chrono::DateTime<chrono::Local>;
