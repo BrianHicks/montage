@@ -88,6 +88,11 @@ A session, either currently-running or historical
 """
 type Session {
 	"""
+	The ID of this session. It will not change if a session is extended, so you can keep track
+	of which session you're looking at in a subscription with this.
+	"""
+	id: Int!
+	"""
 	What kind of session is this?
 	"""
 	kind: Kind!

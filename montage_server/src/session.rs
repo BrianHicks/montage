@@ -9,7 +9,8 @@ use sqlx::{sqlite::SqliteRow, FromRow, Pool, Row, Sqlite};
 #[derive(SimpleObject, Debug, PartialEq, Eq, Clone)]
 #[graphql(complex)]
 pub struct Session {
-    #[graphql(skip)]
+    /// The ID of this session. It will not change if a session is extended, so you can keep track
+    /// of which session you're looking at in a subscription with this.
     pub id: i64,
 
     /// What kind of session is this?
