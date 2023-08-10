@@ -232,7 +232,7 @@ impl<'config> Vexer<'config> {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
-                self.run_script(Script::Annoy { session })?;
+                self.run_script(Script::SessionOverTime { session })?;
                 self.annoy()?;
             }
         }

@@ -15,7 +15,7 @@ pub enum Script<'arg> {
         session: &'arg Session,
         reminder: &'arg Duration,
     },
-    Annoy {
+    SessionOverTime {
         session: &'arg Session,
     },
 }
@@ -26,7 +26,7 @@ impl Script<'_> {
             Self::NewSession { .. } => "new_session",
             Self::SessionEnded { .. } => "session_ended",
             Self::Reminder { .. } => "reminder",
-            Self::Annoy { .. } => "annoy",
+            Self::SessionOverTime { .. } => "session_over_time",
         }
     }
 
@@ -35,7 +35,7 @@ impl Script<'_> {
             Self::NewSession { session } => session,
             Self::SessionEnded { session } => session,
             Self::Reminder { session, .. } => session,
-            Self::Annoy { session } => session,
+            Self::SessionOverTime { session } => session,
         }
     }
 
@@ -53,7 +53,7 @@ impl Script<'_> {
                 session.description.clone(),
                 reminder.num_seconds().to_string(),
             ],
-            Self::Annoy { session } => vec![session.description.clone()],
+            Self::SessionOverTime { session } => vec![session.description.clone()],
         }
     }
 
