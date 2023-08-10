@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This script runs when we get a new session. We don't call this "session
-# start" because it also may be an extension of an existing session!
+# This script runs when we get a new session.
 #
 # available stuff:
 #

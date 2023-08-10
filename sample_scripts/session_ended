@@ -3,8 +3,7 @@ set -euo pipefail
 
 # This script runs once when a session ends (which we know because we started a
 # new one.) If you want to know when a session goes over time, use
-# `session_over_time` instead. Be aware that this is also currently called when
-# a session is extended!
+# `session_over_time` instead.
 #
 # available stuff:
 #
