@@ -183,10 +183,18 @@ impl<'config> Vexer<'config> {
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
     ) -> Result<()> {
+        if let Some(old_session) = &self.session {
+            // TODO: don't call this if the session is just being extended!
+            self.run_script(Script::SessionEnded {
+                session: old_session,
+            })?;
+        }
+
         self.session = session_opt;
         self.sent_session_ended = false;
 
         if let Some(session) = &self.session {
+            // TODO: don't call this if the session is just being extended!
             self.run_script(Script::NewSession { session })?;
 
             let time_remaining = session.projected_end_time - Local::now();
@@ -224,13 +232,7 @@ impl<'config> Vexer<'config> {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
-                if !self.sent_session_ended {
-                    self.run_script(Script::SessionEnded { session })?;
-                    self.sent_session_ended = true;
-                } else {
-                    self.run_script(Script::Annoy { session })?;
-                }
-
+                self.run_script(Script::Annoy { session })?;
                 self.annoy()?;
             }
         }
