@@ -221,6 +221,7 @@ impl<'config> Vexer<'config> {
                 tracing::info!(?time_remaining, "over time");
 
                 self.annoy()?;
+                self.run_script(Script::Annoy)?;
             }
         }
 

@@ -6,6 +6,7 @@ use std::process::Command;
 pub enum Script<'arg> {
     NewSession,
     Reminder { reminder: &'arg Duration },
+    Annoy,
 }
 
 impl Script<'_> {
@@ -13,6 +14,7 @@ impl Script<'_> {
         match self {
             Self::NewSession => "new_session",
             Self::Reminder { .. } => "reminder",
+            Self::Annoy => "annoy",
         }
     }
 
@@ -20,6 +22,7 @@ impl Script<'_> {
         match self {
             Self::NewSession => Vec::new(),
             Self::Reminder { reminder } => vec![reminder.num_seconds().to_string()],
+            Self::Annoy => Vec::new(),
         }
     }
 
