@@ -212,6 +212,7 @@ impl<'config> Vexer<'config> {
 
                 if reminder >= &time_remaining {
                     self.give_reminder(&reminder)?;
+                    self.run_script(Script::Reminder { reminder })?;
                     self.reminders_given.insert(*reminder);
                 }
             }

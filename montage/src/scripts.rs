@@ -1,21 +1,25 @@
+use chrono::Duration;
 use color_eyre::eyre::{bail, Result, WrapErr};
 use std::path::PathBuf;
 use std::process::Command;
 
-pub enum Script {
+pub enum Script<'arg> {
     SessionStarted,
+    Reminder { reminder: &'arg Duration },
 }
 
-impl Script {
+impl Script<'_> {
     fn filename(&self) -> &'static str {
         match self {
             Self::SessionStarted => "session_started",
+            Self::Reminder { .. } => "reminder",
         }
     }
 
-    fn args(&self) -> &[&str] {
+    fn args(&self) -> Vec<String> {
         match self {
-            Self::SessionStarted => &[],
+            Self::SessionStarted => Vec::new(),
+            Self::Reminder { reminder } => vec![reminder.num_seconds().to_string()],
         }
     }
 
