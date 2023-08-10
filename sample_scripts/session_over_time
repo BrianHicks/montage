@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This script runs frequently when a session goes over time. You can use it to
+# make your life more annoying until you extend the session or commit to a new
+# session/break.
+#
+# available stuff:
+#
+# - `$1` is the session description
+# - `$SESSION` is the json-serialized session
+
+say "session ${1:-NO SESSION} is over time!"

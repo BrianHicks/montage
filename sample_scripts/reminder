@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This script runs whenever the `vex` command would give you a time check.
+#
+# available stuff:
+#
+# - `$1` is the session description
+# - `$2` is the number of seconds left
+# - `$SESSION` is the json-serialized session
+
+say "${2:-NO TIME} seconds left in ${1:-NO SESSION}"

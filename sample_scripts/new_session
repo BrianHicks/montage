@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This script runs when we get a new session. We don't call this "session
+# start" because it also may be an extension of an existing session!
+#
+# available stuff:
+#
+# - `$1` is the session description
+# - `$2` is the session kind
+# - `$3` is the session projected end time
+# - `$SESSION` is the json-serialized session
+
+say "starting session ${1:-NO SESSION}"
