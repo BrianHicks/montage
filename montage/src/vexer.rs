@@ -201,9 +201,11 @@ impl<'config> Vexer<'config> {
         self.sent_session_ended = false;
 
         if let Some(session) = &self.session {
-            if same_session {
-                self.run_script(Script::NewSession { session })?;
-            } // TODO: run a script to extend the session
+            self.run_script(if same_session {
+                Script::NewSession { session }
+            } else {
+                Script::SessionExtended { session }
+            })?;
 
             let time_remaining = session.projected_end_time - Local::now();
 

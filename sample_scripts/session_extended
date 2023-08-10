@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This script runs once when a session ends (which we know because we started a
+# new one.) If you want to know when a session goes over time, use
+# `session_over_time` instead.
+#
+# available stuff:
+#
+# - `$1` is the session description
+# - `$2` is the new projected end time
+# - `$SESSION` is the json-serialized session
+
+say "session ${1:-NO SESSION} extended to ${2:-NO EXPECTED END TIME}"
