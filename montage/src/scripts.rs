@@ -48,9 +48,12 @@ impl Script<'_> {
                     session.projected_end_time.to_string(),
                 ]
             }
-            Self::SessionEnded { .. } => vec![],
-            Self::Reminder { reminder, .. } => vec![reminder.num_seconds().to_string()],
-            Self::Annoy { .. } => vec![],
+            Self::SessionEnded { session } => vec![session.description.clone()],
+            Self::Reminder { session, reminder } => vec![
+                session.description.clone(),
+                reminder.num_seconds().to_string(),
+            ],
+            Self::Annoy { session } => vec![session.description.clone()],
         }
     }
 
