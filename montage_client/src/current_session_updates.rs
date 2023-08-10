@@ -11,6 +11,7 @@ pub struct CurrentSessionUpdates {
 
 #[derive(cynic::QueryFragment, Debug, serde::Serialize)]
 pub struct Session {
+    pub id: i32,
     pub description: String,
     pub duration: Duration,
     pub kind: Kind,
