@@ -9,6 +9,7 @@ use montage_client::current_session_updates::Session;
 use montage_client::current_session_updates::{CurrentSessionUpdates, Kind};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use std::collections::HashSet;
+use std::path::PathBuf;
 use std::process::Command;
 use tokio::select;
 
@@ -42,6 +43,9 @@ pub struct VexerConfig {
     /// Get reminders at these intervals before the end of the session (in minutes)
     #[arg(long, short, default_values = ["15", "10", "5", "1"])]
     reminder_at: Vec<i64>,
+
+    #[arg(long)]
+    script_dir: Option<PathBuf>,
 
     #[command(flatten)]
     client: crate::graphql_client::GraphQLClientOptions,
