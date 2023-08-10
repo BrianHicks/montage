@@ -5,10 +5,19 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub enum Script<'arg> {
-    NewSession { session: &'arg Session },
-    SessionEnded { session: &'arg Session },
-    Reminder { reminder: &'arg Duration },
-    Annoy,
+    NewSession {
+        session: &'arg Session,
+    },
+    SessionEnded {
+        session: &'arg Session,
+    },
+    Reminder {
+        session: &'arg Session,
+        reminder: &'arg Duration,
+    },
+    Annoy {
+        session: &'arg Session,
+    },
 }
 
 impl Script<'_> {
@@ -17,7 +26,7 @@ impl Script<'_> {
             Self::NewSession { .. } => "new_session",
             Self::SessionEnded { .. } => "session_ended",
             Self::Reminder { .. } => "reminder",
-            Self::Annoy => "annoy",
+            Self::Annoy { .. } => "annoy",
         }
     }
 
@@ -25,8 +34,11 @@ impl Script<'_> {
         match self {
             Self::NewSession { session } => vec![serde_json::to_string(session).unwrap()],
             Self::SessionEnded { session } => vec![serde_json::to_string(session).unwrap()],
-            Self::Reminder { reminder } => vec![reminder.num_seconds().to_string()],
-            Self::Annoy => Vec::new(),
+            Self::Reminder { session, reminder } => vec![
+                reminder.num_seconds().to_string(),
+                serde_json::to_string(session).unwrap(),
+            ],
+            Self::Annoy { session } => vec![serde_json::to_string(session).unwrap()],
         }
     }
 

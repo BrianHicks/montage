@@ -216,7 +216,7 @@ impl<'config> Vexer<'config> {
 
                 if reminder >= &time_remaining {
                     self.give_reminder(&reminder)?;
-                    self.run_script(Script::Reminder { reminder })?;
+                    self.run_script(Script::Reminder { session, reminder })?;
                     self.reminders_given.insert(*reminder);
                 }
             }
@@ -224,14 +224,14 @@ impl<'config> Vexer<'config> {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
-                self.annoy()?;
-
                 if !self.sent_session_ended {
                     self.run_script(Script::SessionEnded { session })?;
                     self.sent_session_ended = true;
                 } else {
-                    self.run_script(Script::Annoy)?;
+                    self.run_script(Script::Annoy { session })?;
                 }
+
+                self.annoy()?;
             }
         }
 
