@@ -4,21 +4,21 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub enum Script<'arg> {
-    SessionStarted,
+    NewSession,
     Reminder { reminder: &'arg Duration },
 }
 
 impl Script<'_> {
     fn filename(&self) -> &'static str {
         match self {
-            Self::SessionStarted => "session_started",
+            Self::NewSession => "new_session",
             Self::Reminder { .. } => "reminder",
         }
     }
 
     fn args(&self) -> Vec<String> {
         match self {
-            Self::SessionStarted => Vec::new(),
+            Self::NewSession => Vec::new(),
             Self::Reminder { reminder } => vec![reminder.num_seconds().to_string()],
         }
     }
