@@ -29,6 +29,8 @@ The rest is integrations.
 
 `montage vex` will keep track of what you're doing and start saying things every two seconds (by default) when the time you gave expires. Just keep it running in some terminal.
 
+`vex` can also run scripts for you if you'd like to automatically hook up things happening on the system to (e.g.) make your life more annoying or write reports somewhere automatically. See the sample scripts at `sample_scripts/` for how they'll be called.
+
 ### Xbar
 
 You can run `montage xbar` to get a status bar appropriate for controlling tasks in [xbar](https://xbarapp.com/) 
