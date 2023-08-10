@@ -68,6 +68,8 @@ struct Vexer<'config> {
 
     reminders_to_give: HashSet<chrono::Duration>,
     reminders_given: HashSet<chrono::Duration>,
+
+    sent_session_ended: bool,
 }
 
 impl<'config> Vexer<'config> {
@@ -84,6 +86,7 @@ impl<'config> Vexer<'config> {
                 .map(|minutes| chrono::Duration::minutes(*minutes))
                 .collect(),
             reminders_given: HashSet::with_capacity(config.reminder_at.len()),
+            sent_session_ended: false,
         }
     }
 
@@ -181,6 +184,7 @@ impl<'config> Vexer<'config> {
         session_opt: Option<montage_client::current_session_updates::Session>,
     ) -> Result<()> {
         self.session = session_opt;
+        self.sent_session_ended = false;
 
         if let Some(session) = &self.session {
             self.run_script(Script::NewSession { session })?;
@@ -221,7 +225,13 @@ impl<'config> Vexer<'config> {
                 tracing::info!(?time_remaining, "over time");
 
                 self.annoy()?;
-                self.run_script(Script::Annoy)?;
+
+                if !self.sent_session_ended {
+                    self.run_script(Script::SessionEnded { session })?;
+                    self.sent_session_ended = true;
+                } else {
+                    self.run_script(Script::Annoy)?;
+                }
             }
         }
 

@@ -6,6 +6,7 @@ use std::process::Command;
 
 pub enum Script<'arg> {
     NewSession { session: &'arg Session },
+    SessionEnded { session: &'arg Session },
     Reminder { reminder: &'arg Duration },
     Annoy,
 }
@@ -14,6 +15,7 @@ impl Script<'_> {
     fn filename(&self) -> &'static str {
         match self {
             Self::NewSession { .. } => "new_session",
+            Self::SessionEnded { .. } => "session_ended",
             Self::Reminder { .. } => "reminder",
             Self::Annoy => "annoy",
         }
@@ -22,6 +24,7 @@ impl Script<'_> {
     fn args(&self) -> Vec<String> {
         match self {
             Self::NewSession { session } => vec![serde_json::to_string(session).unwrap()],
+            Self::SessionEnded { session } => vec![serde_json::to_string(session).unwrap()],
             Self::Reminder { reminder } => vec![reminder.num_seconds().to_string()],
             Self::Annoy => Vec::new(),
         }
