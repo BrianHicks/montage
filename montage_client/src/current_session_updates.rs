@@ -7,7 +7,7 @@ pub struct CurrentSessionUpdates {
     pub current_session: Option<Session>,
 }
 
-#[derive(cynic::QueryFragment, Debug)]
+#[derive(cynic::QueryFragment, Debug, serde::Serialize)]
 pub struct Session {
     pub description: String,
     pub duration: Duration,

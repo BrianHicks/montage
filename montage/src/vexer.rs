@@ -183,7 +183,7 @@ impl<'config> Vexer<'config> {
         self.session = session_opt;
 
         if let Some(session) = &self.session {
-            self.run_script(Script::NewSession)?;
+            self.run_script(Script::NewSession { session })?;
 
             let time_remaining = session.projected_end_time - Local::now();
 

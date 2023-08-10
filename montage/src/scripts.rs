@@ -1,10 +1,11 @@
 use chrono::Duration;
 use color_eyre::eyre::{bail, Result, WrapErr};
+use montage_client::current_session_updates::Session;
 use std::path::PathBuf;
 use std::process::Command;
 
 pub enum Script<'arg> {
-    NewSession,
+    NewSession { session: &'arg Session },
     Reminder { reminder: &'arg Duration },
     Annoy,
 }
@@ -12,7 +13,7 @@ pub enum Script<'arg> {
 impl Script<'_> {
     fn filename(&self) -> &'static str {
         match self {
-            Self::NewSession => "new_session",
+            Self::NewSession { .. } => "new_session",
             Self::Reminder { .. } => "reminder",
             Self::Annoy => "annoy",
         }
@@ -20,7 +21,7 @@ impl Script<'_> {
 
     fn args(&self) -> Vec<String> {
         match self {
-            Self::NewSession => Vec::new(),
+            Self::NewSession { session } => vec![serde_json::to_string(session).unwrap()],
             Self::Reminder { reminder } => vec![reminder.num_seconds().to_string()],
             Self::Annoy => Vec::new(),
         }
