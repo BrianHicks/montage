@@ -183,19 +183,27 @@ impl<'config> Vexer<'config> {
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
     ) -> Result<()> {
+        let mut same_session = false;
+
         if let Some(old_session) = &self.session {
-            // TODO: don't call this if the session is just being extended!
-            self.run_script(Script::SessionEnded {
-                session: old_session,
-            })?;
+            if let Some(session) = &session_opt {
+                if session.id == old_session.id {
+                    same_session = true;
+                } else {
+                    self.run_script(Script::SessionEnded {
+                        session: old_session,
+                    })?;
+                }
+            }
         }
 
         self.session = session_opt;
         self.sent_session_ended = false;
 
         if let Some(session) = &self.session {
-            // TODO: don't call this if the session is just being extended!
-            self.run_script(Script::NewSession { session })?;
+            if same_session {
+                self.run_script(Script::NewSession { session })?;
+            } // TODO: run a script to extend the session
 
             let time_remaining = session.projected_end_time - Local::now();
 
