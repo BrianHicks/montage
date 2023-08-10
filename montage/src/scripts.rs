@@ -45,7 +45,7 @@ impl Script<'_> {
                 vec![
                     session.description.clone(),
                     session.kind.to_string(),
-                    session.duration.to_string(),
+                    session.projected_end_time.to_string(),
                 ]
             }
             Self::SessionEnded { .. } => vec![],
