@@ -40,13 +40,16 @@ impl Opts {
                 duration,
                 until,
                 client,
-                meeting,
+                is_meeting,
+                is_break,
             } => {
                 let query = montage_client::start::StartMutation::build(
                     montage_client::start::StartMutationVariables {
                         description,
-                        kind: if *meeting {
+                        kind: if *is_meeting {
                             montage_client::start::Kind::Meeting
+                        } else if *is_break {
+                            montage_client::start::Kind::Break
                         } else {
                             montage_client::start::Kind::Task
                         },
@@ -64,38 +67,6 @@ impl Opts {
                 println!(
                     "Started \"{}\", running for {} minutes until {}",
                     session.description,
-                    Self::humanize_duration_minutes(session.duration)?,
-                    Self::humanize_time_12hr(session.projected_end_time),
-                )
-            }
-            Command::Break {
-                description: description_opt,
-                duration,
-                until,
-                client,
-            } => {
-                let description = match description_opt {
-                    Some(description) => description.clone(),
-                    None => String::from("Break"),
-                };
-
-                let query = montage_client::start::StartMutation::build(
-                    montage_client::start::StartMutationVariables {
-                        description: &description,
-                        kind: montage_client::start::Kind::Break,
-                        duration: Self::duration_from_options(duration, until)?,
-                    },
-                );
-
-                let session = client
-                    .make_graphql_request(query)
-                    .await?
-                    .data
-                    .expect("a non-null session")
-                    .start;
-
-                println!(
-                    "Started break, running for {} minutes until {}",
                     Self::humanize_duration_minutes(session.duration)?,
                     Self::humanize_time_12hr(session.projected_end_time),
                 )
@@ -420,27 +391,13 @@ enum Command {
         #[arg(long, conflicts_with = "duration")]
         until: Option<DateTime<Local>>,
 
-        /// Is this task a meeting?
-        #[arg(long)]
-        meeting: bool,
+        /// Is this session a meeting?
+        #[arg(long("meeting"), conflicts_with = "is_break")]
+        is_meeting: bool,
 
-        #[command(flatten)]
-        client: GraphQLClientOptions,
-    },
-
-    /// Take a break in between tasks
-    Break {
-        /// What you'll be doing
-        #[clap(default_value = "Break")]
-        description: Option<String>,
-
-        /// The length of the break, in minutes
-        #[arg(long, conflicts_with = "until")]
-        duration: Option<usize>,
-
-        /// Break until a specific time
-        #[arg(long, conflicts_with = "duration")]
-        until: Option<DateTime<Local>>,
+        /// Is this session a break?
+        #[arg(long("break"), conflicts_with = "is_meeting")]
+        is_break: bool,
 
         #[command(flatten)]
         client: GraphQLClientOptions,
