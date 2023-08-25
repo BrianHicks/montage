@@ -8,6 +8,7 @@ set -euo pipefail
 # available stuff:
 #
 # - `$1` is the session description
+# - `$2` is the session kind
 # - `$SESSION` is the json-serialized session
 
 say "session ${1:-NO SESSION} ended"

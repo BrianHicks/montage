@@ -53,7 +53,9 @@ impl Script<'_> {
                     session.projected_end_time.to_string(),
                 ]
             }
-            Self::SessionEnded { session } => vec![session.description.clone()],
+            Self::SessionEnded { session } => {
+                vec![session.description.clone(), session.kind.to_string()]
+            }
             Self::SessionExtended { session } => vec![
                 session.description.clone(),
                 session.projected_end_time.to_string(),
