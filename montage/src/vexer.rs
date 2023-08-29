@@ -146,7 +146,7 @@ impl<'config> Vexer<'config> {
                                 };
                             },
                             Some(Err(err)) => {
-                                tracing::error!(err=?err, "error getting next sesson");
+                                tracing::error!(err=?err, "error getting next session");
                             }
                             None => {
                                 tracing::info!("disconnected from websocket stream, trying to reconnect");
