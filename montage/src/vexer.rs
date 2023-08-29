@@ -235,9 +235,10 @@ impl<'config> Vexer<'config> {
                 }
 
                 if reminder >= &time_remaining {
-                    self.give_reminder(&reminder).await?;
-                    self.run_script(Script::Reminder { session, reminder })
-                        .await?;
+                    futures::try_join!(
+                        self.give_reminder(&reminder),
+                        self.run_script(Script::Reminder { session, reminder }),
+                    )?;
                     self.reminders_given.insert(*reminder);
                 }
             }
@@ -245,6 +246,7 @@ impl<'config> Vexer<'config> {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
+                // these can't be run in parallel because `annoy` runs in parallel. Oh well!
                 self.run_script(Script::SessionOverTime { session }).await?;
                 self.annoy().await?;
             }
