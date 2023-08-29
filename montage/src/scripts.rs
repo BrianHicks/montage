@@ -2,7 +2,7 @@ use chrono::Duration;
 use color_eyre::eyre::{bail, Result, WrapErr};
 use montage_client::current_session_updates::Session;
 use std::path::PathBuf;
-use std::process::Command;
+use tokio::process::Command;
 
 pub enum Script<'arg> {
     NewSession {
@@ -72,7 +72,7 @@ impl Script<'_> {
         vec![("SESSION", serde_json::to_string(self.session()).unwrap())]
     }
 
-    pub fn run_from(&self, script_dir: &Option<PathBuf>) -> Result<()> {
+    pub async fn run_from(&self, script_dir: &Option<PathBuf>) -> Result<()> {
         if let Some(script_dir) = script_dir {
             let script_name = self.filename();
             let script_path = script_dir.join(script_name);
@@ -90,6 +90,7 @@ impl Script<'_> {
                 .args(self.args())
                 .envs(self.env())
                 .status()
+                .await
                 .wrap_err_with(|| format!("failed to run {script_name}"))?;
 
             if !status.success() {

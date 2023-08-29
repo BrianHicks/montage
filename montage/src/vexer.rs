@@ -11,7 +11,7 @@ use montage_client::current_session_updates::{CurrentSessionUpdates, Kind};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::process::Command;
+use tokio::process::Command;
 use tokio::select;
 
 static THINGS_TO_SAY_AFTER_TASK: [&str; 4] =
@@ -141,7 +141,7 @@ impl<'config> Vexer<'config> {
                                     session=?session_opt,
                                     "got a new session"
                                 );
-                                if let Err(err) = self.got_new_session(session_opt) {
+                                if let Err(err) = self.got_new_session(session_opt).await {
                                     tracing::error!(err=?err, "error in new session");
                                 };
                             },
@@ -154,7 +154,7 @@ impl<'config> Vexer<'config> {
                             },
                         }
                     },
-                    _ = interval.tick() => if let Err(err) = self.tick() {
+                    _ = interval.tick() => if let Err(err) = self.tick().await {
                         tracing::error!(err=?err, "error in time tick");
                     },
                 }
@@ -179,7 +179,7 @@ impl<'config> Vexer<'config> {
         self.backoff = std::time::Duration::from_secs(0);
     }
 
-    fn got_new_session(
+    async fn got_new_session(
         &mut self,
         session_opt: Option<montage_client::current_session_updates::Session>,
     ) -> Result<()> {
@@ -192,7 +192,8 @@ impl<'config> Vexer<'config> {
                 } else {
                     self.run_script(Script::SessionEnded {
                         session: old_session,
-                    })?;
+                    })
+                    .await?;
                 }
             }
         }
@@ -205,7 +206,8 @@ impl<'config> Vexer<'config> {
                 Script::SessionExtended { session }
             } else {
                 Script::NewSession { session }
-            })?;
+            })
+            .await?;
 
             let time_remaining = session.projected_end_time - Local::now();
 
@@ -221,7 +223,7 @@ impl<'config> Vexer<'config> {
         Ok(())
     }
 
-    fn tick(&mut self) -> Result<()> {
+    async fn tick(&mut self) -> Result<()> {
         if let Some(session) = &self.session {
             let time_remaining = session.projected_end_time - Local::now();
 
@@ -233,8 +235,9 @@ impl<'config> Vexer<'config> {
                 }
 
                 if reminder >= &time_remaining {
-                    self.give_reminder(&reminder)?;
-                    self.run_script(Script::Reminder { session, reminder })?;
+                    self.give_reminder(&reminder).await?;
+                    self.run_script(Script::Reminder { session, reminder })
+                        .await?;
                     self.reminders_given.insert(*reminder);
                 }
             }
@@ -242,25 +245,25 @@ impl<'config> Vexer<'config> {
             if time_remaining < chrono::Duration::zero() {
                 tracing::info!(?time_remaining, "over time");
 
-                self.run_script(Script::SessionOverTime { session })?;
-                self.annoy()?;
+                self.run_script(Script::SessionOverTime { session }).await?;
+                self.annoy().await?;
             }
         }
 
         Ok(())
     }
 
-    fn give_reminder(&self, reminder_at: &chrono::Duration) -> Result<()> {
+    async fn give_reminder(&self, reminder_at: &chrono::Duration) -> Result<()> {
         let minutes = reminder_at.num_minutes();
 
         if minutes == 1 {
-            self.say("one minute left")
+            self.say("one minute left").await
         } else {
-            self.say(&format!("{minutes} minutes left"))
+            self.say(&format!("{minutes} minutes left")).await
         }
     }
 
-    fn annoy(&mut self) -> Result<()> {
+    async fn annoy(&mut self) -> Result<()> {
         if let Some(session) = &self.session {
             let what_to_say = match session.kind {
                 Kind::Task => THINGS_TO_SAY_AFTER_TASK
@@ -276,13 +279,13 @@ impl<'config> Vexer<'config> {
                 Kind::Meeting => return Ok(()),
             };
 
-            self.say(what_to_say)?;
+            self.say(what_to_say).await?;
         }
 
         Ok(())
     }
 
-    fn say(&self, what_to_say: &str) -> Result<()> {
+    async fn say(&self, what_to_say: &str) -> Result<()> {
         if self.in_meeting() {
             return Ok(());
         }
@@ -291,6 +294,7 @@ impl<'config> Vexer<'config> {
             .args(&self.config.tts_arg)
             .arg(what_to_say)
             .status()
+            .await
             .wrap_err("failed to run `say`")?;
 
         if !status.success() {
@@ -307,7 +311,7 @@ impl<'config> Vexer<'config> {
         }
     }
 
-    fn run_script(&self, script: Script) -> Result<()> {
-        script.run_from(&self.config.script_dir)
+    async fn run_script(&self, script: Script<'_>) -> Result<()> {
+        script.run_from(&self.config.script_dir).await
     }
 }
