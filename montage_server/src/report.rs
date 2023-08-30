@@ -308,4 +308,24 @@ mod test {
         assert_eq!(totals.long_break, Duration::hours(8));
         assert_eq!(totals.meeting, Duration::zero());
     }
+
+    #[test]
+    fn excludes_offline_time() {
+        let today = at_midnight(Local::now());
+
+        let totals = Totals::from_sessions(
+            &vec![session(
+                Kind::Offline,
+                today - Duration::hours(8),
+                Duration::hours(16),
+                true,
+            )],
+            today,
+            today + Duration::days(1),
+        );
+
+        assert_eq!(totals.short_break, Duration::zero());
+        assert_eq!(totals.long_break, Duration::zero());
+        assert_eq!(totals.meeting, Duration::zero());
+    }
 }
