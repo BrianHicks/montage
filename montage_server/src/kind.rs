@@ -13,6 +13,9 @@ pub enum Kind {
 
     /// A session where you're in a meeting (helpful for reporting and for silencing the vexer.)
     Meeting,
+
+    /// Time when you're totally offline
+    Offline,
 }
 
 impl Kind {
@@ -21,6 +24,7 @@ impl Kind {
             Self::Task => Duration::minutes(25),
             Self::Break => Duration::minutes(5),
             Self::Meeting => Duration::minutes(60),
+            Self::Offline => Duration::minutes(60),
         }
     }
 }
