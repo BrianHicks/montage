@@ -42,6 +42,7 @@ impl Opts {
                 client,
                 is_meeting,
                 is_break,
+                is_offline,
             } => {
                 let query = montage_client::start::StartMutation::build(
                     montage_client::start::StartMutationVariables {
@@ -50,6 +51,8 @@ impl Opts {
                             montage_client::start::Kind::Meeting
                         } else if *is_break {
                             montage_client::start::Kind::Break
+                        } else if *is_offline {
+                            montage_client::start::Kind::Offline
                         } else {
                             montage_client::start::Kind::Task
                         },
@@ -392,12 +395,16 @@ enum Command {
         until: Option<DateTime<Local>>,
 
         /// Is this session a meeting?
-        #[arg(long("meeting"), conflicts_with = "is_break")]
+        #[arg(long("meeting"), conflicts_with_all = ["is_break", "is_offline"])]
         is_meeting: bool,
 
         /// Is this session a break?
-        #[arg(long("break"), conflicts_with = "is_meeting")]
+        #[arg(long("break"), conflicts_with_all = ["is_meeting", "is_offline"])]
         is_break: bool,
+
+        /// Is this session offline time?
+        #[arg(long("offline"), conflicts_with_all = ["is_break", "is_meeting"])]
+        is_offline: bool,
 
         #[command(flatten)]
         client: GraphQLClientOptions,
