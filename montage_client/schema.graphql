@@ -33,6 +33,10 @@ enum Kind {
 	A session where you're in a meeting (helpful for reporting and for silencing the vexer.)
 	"""
 	MEETING
+	"""
+	Time when you're totally offline
+	"""
+	OFFLINE
 }
 
 type Mutation {
