@@ -169,6 +169,7 @@ impl Totals {
                         .and_modify(|current| *current = *current + session_total_within_dates)
                         .or_insert(session_total_within_dates);
                 }
+                Kind::Offline => continue,
             };
         }
 
