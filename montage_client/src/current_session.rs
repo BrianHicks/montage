@@ -23,6 +23,7 @@ pub enum Kind {
     Task,
     Break,
     Meeting,
+    Offline,
 }
 
 type DateTime = chrono::DateTime<chrono::Local>;

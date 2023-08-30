@@ -272,7 +272,7 @@ impl<'config> Vexer<'config> {
                     .choose(&mut self.rng)
                     .expect("THINGS_TO_SAY_AFTER_TASK should always have at least one item"),
 
-                Kind::Break => THINGS_TO_SAY_AFTER_BREAK
+                Kind::Break | Kind::Offline => THINGS_TO_SAY_AFTER_BREAK
                     .choose(&mut self.rng)
                     .expect("THINGS_TO_SAY_AFTER_BREAK should always have at least one item"),
 

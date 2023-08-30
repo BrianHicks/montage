@@ -72,6 +72,7 @@ impl XBar {
             Kind::Task => "⏰",
             Kind::Break => "☕️",
             Kind::Meeting => "🗣",
+            Kind::Offline => "💤",
         }
         .to_string()
     }

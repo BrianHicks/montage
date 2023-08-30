@@ -31,6 +31,7 @@ pub enum Kind {
     Task,
     Break,
     Meeting,
+    Offline,
 }
 
 impl Display for Kind {
@@ -39,6 +40,7 @@ impl Display for Kind {
             Self::Task => f.write_str("task"),
             Self::Break => f.write_str("break"),
             Self::Meeting => f.write_str("meeeting"),
+            Self::Offline => f.write_str("offline"),
         }
     }
 }
