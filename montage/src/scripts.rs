@@ -10,6 +10,7 @@ pub enum Script<'arg> {
     },
     SessionEnded {
         session: &'arg Session,
+        next_session: &'arg Session,
     },
     SessionExtended {
         session: &'arg Session,
@@ -37,7 +38,7 @@ impl Script<'_> {
     fn session(&self) -> &Session {
         match self {
             Self::NewSession { session } => session,
-            Self::SessionEnded { session } => session,
+            Self::SessionEnded { session, .. } => session,
             Self::SessionExtended { session } => session,
             Self::Reminder { session, .. } => session,
             Self::SessionOverTime { session } => session,
@@ -53,8 +54,15 @@ impl Script<'_> {
                     session.projected_end_time.to_string(),
                 ]
             }
-            Self::SessionEnded { session } => {
-                vec![session.description.clone(), session.kind.to_string()]
+            Self::SessionEnded {
+                session,
+                next_session,
+            } => {
+                vec![
+                    session.description.clone(),
+                    session.kind.to_string(),
+                    next_session.kind.to_string(),
+                ]
             }
             Self::SessionExtended { session } => vec![
                 session.description.clone(),

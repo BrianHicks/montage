@@ -192,6 +192,7 @@ impl<'config> Vexer<'config> {
                 } else {
                     self.run_script(Script::SessionEnded {
                         session: old_session,
+                        next_session: session,
                     })
                     .await?;
                 }

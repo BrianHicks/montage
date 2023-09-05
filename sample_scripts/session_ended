@@ -9,6 +9,8 @@ set -euo pipefail
 #
 # - `$1` is the session description
 # - `$2` is the session kind
+# - `$3` is the next session's kind (use this to detect if you're going from
+#   task to task, for example)
 # - `$SESSION` is the json-serialized session
 
 say "session ${1:-NO SESSION} ended"
