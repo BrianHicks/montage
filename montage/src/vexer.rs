@@ -70,6 +70,7 @@ struct Vexer<'config> {
     reminders_given: HashSet<chrono::Duration>,
 
     sent_session_ended: bool,
+    current_on_task_duration: std::time::Duration,
 }
 
 impl<'config> Vexer<'config> {
@@ -87,6 +88,7 @@ impl<'config> Vexer<'config> {
                 .collect(),
             reminders_given: HashSet::with_capacity(config.reminder_at.len()),
             sent_session_ended: false,
+            current_on_task_duration: std::time::Duration::from_secs(0),
         }
     }
 
@@ -209,6 +211,13 @@ impl<'config> Vexer<'config> {
                 Script::NewSession { session }
             })
             .await?;
+
+            self.current_on_task_duration = match session.kind {
+                Kind::Task | Kind::Meeting => {
+                    self.current_on_task_duration + session.duration.into()
+                }
+                Kind::Break | Kind::Offline => std::time::Duration::from_secs(0),
+            };
 
             let time_remaining = session.projected_end_time - Local::now();
 
