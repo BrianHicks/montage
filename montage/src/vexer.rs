@@ -14,17 +14,6 @@ use std::path::PathBuf;
 use tokio::process::Command;
 use tokio::select;
 
-static THINGS_TO_SAY_AFTER_TASK: [&str; 4] =
-    ["hey", "Brian", "time for a break?", "need another minute?"];
-
-static THINGS_TO_SAY_AFTER_BREAK: [&str; 5] = [
-    "hey",
-    "Brian",
-    "pick a new task",
-    "ready to go?",
-    "let's do this!",
-];
-
 static MAXIMUM_BACKOFF: std::time::Duration = std::time::Duration::from_secs(30);
 
 #[derive(Parser, Debug)]
@@ -47,6 +36,15 @@ pub struct VexerConfig {
 
     #[arg(long)]
     script_dir: Option<PathBuf>,
+
+    /// The computer will say your name sometimes. What is it?
+    #[arg(long, default_value = "Brian")]
+    your_name: String,
+
+    /// How long should you work before the computer prompts you to take a break at the end of a
+    /// session?
+    #[arg(long, default_value = "25")]
+    ideal_work_session_length: f64,
 
     #[command(flatten)]
     client: crate::graphql_client::GraphQLClientOptions,
@@ -277,21 +275,44 @@ impl<'config> Vexer<'config> {
 
     async fn annoy(&mut self) -> Result<()> {
         if let Some(session) = &self.session {
-            let what_to_say = match session.kind {
-                Kind::Task => THINGS_TO_SAY_AFTER_TASK
-                    .choose(&mut self.rng)
-                    .expect("THINGS_TO_SAY_AFTER_TASK should always have at least one item"),
+            let options = match session.kind {
+                Kind::Task => {
+                    let mut options =
+                        vec![String::from("hey"), String::from("need another minute?")];
+                    options.push(self.config.your_name.clone());
 
-                Kind::Break | Kind::Offline => THINGS_TO_SAY_AFTER_BREAK
-                    .choose(&mut self.rng)
-                    .expect("THINGS_TO_SAY_AFTER_BREAK should always have at least one item"),
+                    if self.current_on_task_duration.as_secs_f64()
+                        >= self.config.ideal_work_session_length * 60.0
+                    {
+                        options.push(format!(
+                            "You've been working for {} minutes. Time for a break?",
+                            self.current_on_task_duration.as_secs_f64() / 60.0
+                        ))
+                    }
+
+                    options
+                }
+
+                Kind::Break | Kind::Offline => {
+                    let mut options = vec![
+                        String::from("hey"),
+                        String::from("pick a new task"),
+                        String::from("ready to go?"),
+                        String::from("let's do this!"),
+                    ];
+                    options.push(self.config.your_name.clone());
+
+                    options
+                }
 
                 // We don't annoy when meetings end because sometimes they run long and it's
                 // awkward to have the computer start saying silly things on Zoom!
-                Kind::Meeting => return Ok(()),
+                Kind::Meeting => vec![],
             };
 
-            self.say(what_to_say).await?;
+            if let Some(what_to_say) = options.choose(&mut self.rng) {
+                self.say(what_to_say).await?
+            }
         }
 
         Ok(())
