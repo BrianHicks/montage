@@ -254,7 +254,9 @@ impl<'config> Vexer<'config> {
                 }
             }
 
-            if time_remaining < chrono::Duration::zero() {
+            if time_remaining < chrono::Duration::zero()
+                || self.working_over_ideal_work_session_length()
+            {
                 tracing::info!(?time_remaining, "over time");
 
                 // these can't be run in parallel because `annoy` runs in parallel. Oh well!
