@@ -1,6 +1,6 @@
 use super::scripts::Script;
 use super::TokioSpawner;
-use chrono::Local;
+use chrono::{DateTime, Local};
 use clap::Parser;
 use color_eyre::eyre::{bail, Result, WrapErr};
 use cynic::SubscriptionBuilder;
@@ -42,9 +42,9 @@ pub struct VexerConfig {
     your_name: String,
 
     /// How long should you work before the computer prompts you to take a break at the end of a
-    /// session?
+    /// session? (minutes)
     #[arg(long, default_value = "25")]
-    ideal_work_session_length: f64,
+    ideal_work_session_length: i64,
 
     #[command(flatten)]
     client: crate::graphql_client::GraphQLClientOptions,
@@ -68,7 +68,7 @@ struct Vexer<'config> {
     reminders_given: HashSet<chrono::Duration>,
 
     sent_session_ended: bool,
-    current_on_task_duration: std::time::Duration,
+    current_work_session_started: Option<DateTime<Local>>,
 }
 
 impl<'config> Vexer<'config> {
@@ -86,7 +86,7 @@ impl<'config> Vexer<'config> {
                 .collect(),
             reminders_given: HashSet::with_capacity(config.reminder_at.len()),
             sent_session_ended: false,
-            current_on_task_duration: std::time::Duration::from_secs(0),
+            current_work_session_started: None,
         }
     }
 
@@ -210,11 +210,14 @@ impl<'config> Vexer<'config> {
             })
             .await?;
 
-            self.current_on_task_duration = match session.kind {
+            match session.kind {
                 Kind::Task | Kind::Meeting => {
-                    self.current_on_task_duration + session.duration.into()
+                    if self.current_work_session_started.is_none() {
+                        self.current_work_session_started = Some(Local::now());
+                    }
                 }
-                Kind::Break | Kind::Offline => std::time::Duration::from_secs(0),
+
+                Kind::Break | Kind::Offline => self.current_work_session_started = None,
             };
 
             let time_remaining = session.projected_end_time - Local::now();
@@ -281,13 +284,15 @@ impl<'config> Vexer<'config> {
                         vec![String::from("hey"), String::from("need another minute?")];
                     options.push(self.config.your_name.clone());
 
-                    if self.current_on_task_duration.as_secs_f64()
-                        >= self.config.ideal_work_session_length * 60.0
-                    {
-                        options.push(format!(
-                            "You've been working for {} minutes. Time for a break?",
-                            self.current_on_task_duration.as_secs_f64() / 60.0
-                        ))
+                    if self.working_over_ideal_work_session_length() {
+                        match self.current_work_session_length() {
+                            Some(length) => options.push(format!(
+                                "You've been working for {} minutes. Time for a break?",
+                                length.num_minutes(),
+                            )),
+
+                            None => tracing::warn!("current_work_session_length was None, despite working_over_ideal_work_session_length being true"),
+                        }
                     }
 
                     options
@@ -342,6 +347,17 @@ impl<'config> Vexer<'config> {
             Some(Session { kind, .. }) => kind == Kind::Meeting,
             _ => false,
         }
+    }
+
+    fn current_work_session_length(&self) -> Option<chrono::Duration> {
+        self.current_work_session_started
+            .map(|start| Local::now() - start)
+    }
+
+    fn working_over_ideal_work_session_length(&self) -> bool {
+        self.current_work_session_length()
+            .map(|len| len.num_minutes() > self.config.ideal_work_session_length)
+            .unwrap_or(false)
     }
 
     async fn run_script(&self, script: Script<'_>) -> Result<()> {
