@@ -8,11 +8,9 @@ It does some cool stuff:
 - It annoys me when I'm not doing the thing I said I was gonna do
 - It lets me hook into those things to write down what I did for the day
 
-(Some of these things are not fully implemented yet.)
-
 To use it:
 
-1. Be me, or at least be named Brian, or at least be OK with being called Brian by a computer.
+1. Be me, or at least be named Brian, or at least be OK with being called Brian by a computer (by default.)
 2. Use macOS, OmniFocus for tasks, and Obsidian (or other Markdowny thing) for notes.
 
 ## How to use!
@@ -27,9 +25,11 @@ The rest is integrations.
 
 ### Vex
 
-`montage vex` will keep track of what you're doing and start saying things every two seconds (by default) when the time you gave expires. Just keep it running in some terminal.
+`montage vex` will keep track of what you're doing and start saying things every two seconds (by default) when the time you gave expires or you've been working too long. Just keep it running in some terminal.
 
 `vex` can also run scripts for you if you'd like to automatically hook up things happening on the system to (e.g.) make your life more annoying or write reports somewhere automatically. See the sample scripts at `sample_scripts/` for how they'll be called.
+
+Check out `montage vex --help` for other useful things this command can do.
 
 ### Xbar
 
