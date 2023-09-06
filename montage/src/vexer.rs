@@ -280,8 +280,7 @@ impl<'config> Vexer<'config> {
         if let Some(session) = &self.session {
             let options = match session.kind {
                 Kind::Task => {
-                    let mut options =
-                        vec![String::from("hey"), String::from("need another minute?")];
+                    let mut options = vec![String::from("hey")];
                     options.push(self.config.your_name.clone());
 
                     if self.working_over_ideal_work_session_length() {
@@ -293,6 +292,8 @@ impl<'config> Vexer<'config> {
 
                             None => tracing::warn!("current_work_session_length was None, despite working_over_ideal_work_session_length being true"),
                         }
+                    } else {
+                        options.push(String::from("need another couple minutes?"));
                     }
 
                     options
