@@ -287,7 +287,7 @@ impl<'config> Vexer<'config> {
                     if self.working_over_ideal_work_session_length() {
                         match self.current_work_session_length() {
                             Some(length) => options.push(format!(
-                                "You've been working for {} minutes. Time for a break?",
+                                "You've been working for {} minutes.",
                                 length.num_minutes(),
                             )),
 
