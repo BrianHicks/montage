@@ -18,7 +18,10 @@
         # `nix build`
         packages.montage = naersk-lib.buildPackage {
           root = ./.;
-          buildInputs = [ pkgs.libiconv pkgs.rustPackages.clippy ];
+          buildInputs = [
+            pkgs.libiconv
+            pkgs.rustPackages.clippy
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [ pkgs.darwin.apple_sdk.frameworks.SystemConfiguration ];
         };
         defaultPackage = packages.montage;
         overlay = final: prev: { montage = packages.montage; };
