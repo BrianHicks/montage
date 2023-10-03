@@ -20,7 +20,6 @@
           root = ./.;
           buildInputs = [
             pkgs.libiconv
-            pkgs.rustPackages.clippy
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [ pkgs.darwin.apple_sdk.frameworks.SystemConfiguration ];
         };
         defaultPackage = packages.montage;
