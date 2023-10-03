@@ -15,4 +15,13 @@ pub enum Error {
 
     #[error("error sending new session: {0}")]
     SendError(tokio::sync::watch::error::SendError<Option<Session>>),
+
+    #[error("validation error starting a session: {0}")]
+    StartSessionError(StartSessionError),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum StartSessionError {
+    #[error("description cannot be blank")]
+    DescriptionWasBlank,
 }

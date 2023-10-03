@@ -1,4 +1,4 @@
-use super::error::{Error, Result};
+use super::error::{Error, Result, StartSessionError};
 use super::kind::Kind;
 use async_graphql::{ComplexObject, SimpleObject};
 use chrono::{DateTime, Duration, Local};
@@ -119,6 +119,12 @@ impl Session {
         start_time: DateTime<Local>,
         duration: Duration,
     ) -> Result<Self> {
+        if description.trim().is_empty() {
+            return Err(Error::StartSessionError(
+                StartSessionError::DescriptionWasBlank,
+            ));
+        }
+
         Self::stop_all(pool, start_time).await?;
 
         let res = sqlx::query_as::<_, Session>(indoc! {"
@@ -333,6 +339,22 @@ mod test {
 
         assert_ne!(first_session_refetched.end_time, first_session.end_time);
         assert_eq!(first_session_refetched.end_time, Some(next));
+    }
+
+    #[tokio::test]
+    async fn cannot_start_a_session_with_a_blank_description() {
+        let pool = get_pool().await;
+        let now = Local::now();
+        let duration = Duration::minutes(25);
+
+        let resp = Session::start(&pool, Kind::Task, "", now, duration)
+            .await
+            .unwrap_err();
+
+        assert_eq!(
+            resp.to_string(),
+            "validation error starting a session: description cannot be blank"
+        );
     }
 
     #[tokio::test]
