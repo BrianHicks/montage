@@ -241,13 +241,13 @@ impl<'config> Vexer<'config> {
             for reminder in &self.reminders_to_give {
                 // could use difference but it results in an immutable borrow and we need it to be
                 // immutable just below.
-                if self.reminders_given.contains(&reminder) {
+                if self.reminders_given.contains(reminder) {
                     continue;
                 }
 
                 if reminder >= &time_remaining {
                     futures::try_join!(
-                        self.give_reminder(&reminder),
+                        self.give_reminder(reminder),
                         self.run_script(Script::Reminder { session, reminder }),
                     )?;
                     self.reminders_given.insert(*reminder);
