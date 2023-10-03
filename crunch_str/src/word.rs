@@ -174,16 +174,17 @@ impl Word {
             .and_then(|captures| captures.get(1))
             .map(|vowel| vowel.range())
     }
+}
 
-    pub fn to_string(&self) -> String {
-        let mut out = String::with_capacity(self.word.len() + self.trailing_whitespace);
+impl std::fmt::Display for Word {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.word)?;
 
-        out.push_str(&self.word);
         for _ in 0..self.trailing_whitespace {
-            out.push(' ');
+            f.write_str(" ")?;
         }
 
-        out
+        Ok(())
     }
 }
 
