@@ -12,6 +12,10 @@
     {
       "image": "cup.and.saucer",
       "identifier": "break"
+    },
+    {
+      "image": "plus",
+      "identifier": "extend"
     }
   ]
 }
